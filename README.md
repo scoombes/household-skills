@@ -2,7 +2,19 @@
 
 Custom agent skills for HouseHold development and operations, plus useful resources for writing and maintaining them.
 
-This repository will start with selected skills from the existing HouseHold setup. Selection is pending; no existing skills have been copied or installed yet.
+This repository contains three HouseHold skills from the existing setup, along with their eight supporting guides. The installed copies remain in their current locations.
+
+## Skills
+
+| Skill | Purpose | Supporting guides |
+| --- | --- | --- |
+| [Operating HouseHold AWS](skills/operating-household-aws/SKILL.md) | HouseHold AWS operating rules and approval procedures. | [Approval mode](skills/operating-household-aws/reference/approval-mode.md), [checks](skills/operating-household-aws/reference/checks.md), [DNS](skills/operating-household-aws/reference/dns.md), [failed stacks](skills/operating-household-aws/reference/failed-stack.md), and [traps](skills/operating-household-aws/reference/traps.md). |
+| [Orca Pipeline](skills/orca-pipeline/SKILL.md) | HouseHold's per-story development and review workflow. | [Role responsibilities](skills/orca-pipeline/reference/roles.md), [panel review](skills/orca-pipeline/reference/panel-review.md), and [test standard](skills/orca-pipeline/reference/test-standard.md). |
+| [Coordinating Epics](skills/coordinating-epics/SKILL.md) | HouseHold's coordination of work across multiple stories. | Shares the pipeline's [role responsibilities](skills/orca-pipeline/reference/roles.md). |
+
+The `orca-cli`, `orchestration`, and `computer-use` skills belong to Orca IDE and remain external dependencies. Other references to `household-infra` and `housetools` remain in those repositories.
+
+AWS's upstream guide library stays outside this repository. The AWS skill explains how to reuse the existing local copies and [where to download needed documents if missing](skills/operating-household-aws/SKILL.md#external-aws-guides). No third-party AWS guides, evaluation files, or tests are included.
 
 ## Repository structure
 
@@ -32,7 +44,7 @@ Start with a concrete, repeatable HouseHold task. Describe what the skill does a
 
 Keep the main instructions concise. Link supporting material from `SKILL.md` and explain when to read it. Document any required tools or host-specific behavior, especially where Codex, Claude Code, or Orca differ. See [OpenAI's authoring guidance](https://developers.openai.com/plugins/build/skills) and [Anthropic's authoring best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices).
 
-Before importing an existing skill, review its complete folder, dependencies, scripts, and references. Preserve required notices and working relative paths. Add the skill to a catalogue here once it has been selected and imported.
+Before importing an existing skill, review its complete folder, dependencies, scripts, and references. Include the selected HouseHold documents and preserve working relative paths. Keep upstream AWS guides outside this repository and preserve required notices with downloaded copies. Update the skill catalogue above when adding a selected skill.
 
 Validate format and file references, then try representative requests: one that should invoke the skill, a nearby request that should not, and incomplete input. Check the actual result and any script behavior. [OpenAI's evaluation guide](https://developers.openai.com/blog/eval-skills) describes a way to make these checks repeatable.
 
