@@ -1,7 +1,7 @@
 # PR panel review
 
-Rules for the two-seat PR panel. Coordinators follow all of it. Reviewer seats are pointed at this file
-and follow "Inputs" through "Finding format".
+Rules for each PR panel reviewer. The coordinator's side (outcomes, proportion, disagreement, CRITICAL
+halt, round checklist) is in [panel-coordinator.md](panel-coordinator.md); reviewers don't need it.
 
 ## Contents
 - Inputs
@@ -10,11 +10,6 @@ and follow "Inputs" through "Finding format".
 - Scope
 - Severity
 - Finding format
-- Outcomes
-- Proportion (coordinator)
-- Disagreement (coordinator)
-- CRITICAL halt
-- Round checklist (coordinator)
 
 ## Inputs
 The coordinator gives each reviewer:
@@ -80,7 +75,8 @@ construction (adversarial input, contrived layout, crafted race) makes it LOW at
   part makes it LOW.
 - LOW/NIT: file:line plus one line. Max 10 per review, ranked. CRITICAL/HIGH/MEDIUM are never capped.
 - Out-of-scope findings go in a separate `Out of scope` section of the verdict.
-- CRITICAL: escalate to the coordinator immediately (see CRITICAL halt), then finish and post the verdict.
+- CRITICAL: escalate to the coordinator immediately with the five-part finding, then finish and post the
+  verdict.
 
 Example blocking finding:
 ```
@@ -89,66 +85,4 @@ Trigger: an import file whose meal has an empty ingredients array (the mobile ap
 Wrong result: the meal is saved with ingredientCount=1; plan section 3 says empty meals are rejected with 422.
 Proof: traced code path: parseMeal() defaults [] to [placeholder] at line 138 before validate() runs.
 Fix: validate before defaulting (swap lines 138 and 142).
-```
-
-## Outcomes
-
-| Finding | In scope | Out of scope |
-|---|---|---|
-| CRITICAL | CRITICAL halt | CRITICAL halt |
-| HIGH / MEDIUM | Blocks merge | Never blocks. Coordinator dedupes and sends to Sean's queue with story and PR comment link; Sean decides whether to file it |
-| LOW / NIT | Coordinator's follow-up list (new code Sean may revisit or discard); never blocks | Dropped (old code is noise at this level) |
-
-- Rounds don't change outcomes: a HIGH/MEDIUM first raised in round 3 still blocks.
-- Round 2+: verify every prior blocking finding and review the fix changes.
-- Max 3 rounds. Anything blocking after round 3 goes to Sean; no round 4.
-- A finding class that recurs in the same area: switch to a blunter fail-closed design instead of
-  patching another case.
-
-## Proportion (coordinator)
-Good enough is the target, not perfect. Reviewers add real value and also drift toward perfection, the
-Codex seat especially: rounds of test changes to prove the implausible can't happen are waste. A story
-with hundreds of new tests is doing too much. Push back.
-- Test requests that don't name a plan-required rule are LOW; downgrade without debate.
-- If a fix would add new machinery (module, check layer, test framework) or more code than the change it
-  fixes, you may reject it. Post a PR reply naming the smaller fix or accepting the residual risk.
-  Next-round reviewers receive that reply and must answer it, not restate the finding.
-- Test budget: past 1.5x the plan's estimated new-test count, stop, cut duplicate and non-plan tests, and
-  exceed the budget only with Sean's OK.
-- Trend: track per reviewer the blocking findings raised vs downgraded/rejected for proportion. Past half
-  in a story, apply these rules more strictly to that reviewer and tell Sean in your next status. Never
-  lower its model or effort.
-
-## Disagreement (coordinator)
-- No voting. Any valid blocking finding blocks, whatever the other reviewer said.
-- You may downgrade a MEDIUM to LOW only with a one-line reason posted on the PR, and list every
-  downgrade in your next status to Sean.
-- You may downgrade a HIGH only for a missing format part, never on judgment. Disagreement about a
-  well-formed HIGH goes to Sean.
-- Only Sean downgrades a CRITICAL.
-- The implementer may dispute a finding in its report but may not ignore it. You decide per the above.
-
-## CRITICAL halt
-1. The reviewer escalates to its coordinator immediately with the five-part finding, then finishes and
-   posts its verdict.
-2. All work stops, across every coordinator: no new seats, merges or pushes. Running seats stop at their
-   next safe point (no half-written edits). Nothing is closed.
-3. One exception: launch a fresh read-only Claude investigator. It reports the cause (file:line,
-   mechanism, since when), impact (data, users, main/staging/prod), and 2-3 fix options with trade-offs,
-   size, risk and a recommendation. It does not fix anything.
-4. Only the top coordinator (EC, else SC) sends Sean the push notification, at once, then the
-   investigation, and re-notifies until he responds. Other coordinators don't send their own alert.
-5. Nothing resumes until Sean sets the direction. AWS work (secret rotation, deploys) stays Sean's.
-
-## Round checklist (coordinator)
-Copy per round:
-```
-Panel round N (head <sha>):
-- [ ] Logs for this head exist, untrimmed, sha matches
-- [ ] Both reviewers launched fresh together (opus high + gpt-6.1-sol high/xhigh), with inputs above
-- [ ] Both verdicts posted, bound to this head; mutant results in
-- [ ] Each finding sorted: CRITICAL halt / blocks / Sean's queue / follow-up / dropped
-- [ ] Proportion applied; downgrades and fix rejections posted on the PR
-- [ ] Log folder deleted; reviewer terminals closed and their worktrees removed
-- [ ] Blocking findings open? -> fresh fix seat (rebase onto `origin/main`, full `hous ci` + new logs) -> round N+1 (max 3)
 ```

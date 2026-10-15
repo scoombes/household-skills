@@ -17,8 +17,10 @@ verification). **Head** = the PR's current commit sha. **Work dir** = `~/househo
 Reference files (read when the stage needs them; give seats the path):
 - [reference/roles.md](reference/roles.md): EC/PC/SC differences, what every role hands back,
   planning via a PC, replacing a coordinator that does seat work.
-- [reference/panel-review.md](reference/panel-review.md): PR panel rules, severity, outcomes, CRITICAL
-  halt, round checklist.
+- [reference/panel-review.md](reference/panel-review.md): reviewer rules: inputs, evidence, scope,
+  severity, finding format. Give reviewers this path.
+- [reference/panel-coordinator.md](reference/panel-coordinator.md): outcomes, proportion, disagreement,
+  CRITICAL halt, round checklist.
 - [reference/test-standard.md](reference/test-standard.md): what makes a test count.
 
 ## Coordinators never do the work
@@ -53,12 +55,8 @@ job; launch one. Seats never message Sean. Role differences and the drift proced
   checks, `hous pr status|wait|merge --task <id>` for merge gates (App token only), `hous worker
   start|status` for seats.
 - PRs open as DRAFT. No CI on drafts.
-- Any seat that touches AWS, household-infra code, a gate package or DNS: load the `operating-household-aws` skill first.
-  Any AWS write runs only through `hous aws apply|run` after Sean's OK on an approval card (the sitting is
-  the human gate). Run sheets (`household-infra/docs/runbooks/run-sheet-template.md`) replace gate packages.
-  The one exception, in either mode: packages READY before the switch (`hous help aws apply` succeeding) finish with
-  `hous pkg run <package> <block> --go "<Sean's OK>"`, including the writes their Waivers section names. No new
-  package, harness, fakes, mutants, receipts or `packages-index.md`.
+- Any seat that touches AWS, household-infra code, a gate package or DNS: load the `operating-household-aws`
+  skill first; it owns every AWS rule.
 - Never `pgrep -f` a pattern your own wait loop contains. No plain `git fetch/pull/push/ls-remote/clone`: wrap
   every git network command and every `gh` call in `agent-token run`.
 - Implementer and fix seats: follow test-standard.md, and include this log requirement with the real
@@ -79,7 +77,7 @@ job; launch one. Seats never message Sean. Role differences and the drift proced
   > When the work the task asks for is done and checked, stop and report. Don't add features, tests,
   > files, docs or refactors that weren't asked for. If you think one would help, mention it in your
   > report instead of doing it.
-- Reviewer seats: follow panel-review.md, Inputs through Finding format.
+- Reviewer seats: follow panel-review.md (give the full path).
 - The Orca preamble says not to post to GitHub. If the task needs a push or draft PR, say so explicitly.
 
 ## Stages
@@ -111,7 +109,7 @@ One Run, all Tasks created upfront with deps, one shared worktree unless files c
    `hous ci` on that commit, save logs, push, open a draft PR. Do not merge.
 4. **Baseline check** (separate seat). Independently verify every "pre-existing" or "unrelated" failure
    claim against main. A real failure on main is fixed or escalated, never waved through.
-5. **PR panel.** Follow [reference/panel-review.md](reference/panel-review.md). Fresh Claude (`opus`,
+5. **PR panel.** Follow [reference/panel-coordinator.md](reference/panel-coordinator.md). Fresh Claude (`opus`,
    high) + fresh Codex (`gpt-6.1-sol`, high/xhigh) reviewer, every round; max 3 rounds.
 6. **Untested paths.** A reviewer-flagged untested path blocks merge only while a check for it is queued
    or running; never merge past a running check, and answer "what's the holdup" with that check.
