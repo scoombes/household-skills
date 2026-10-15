@@ -20,7 +20,7 @@ Copy and track:
 ```
 Epic <id>:
 - [ ] Read every story's shape (titles, deps, acceptance), not their guts
-- [ ] Epic plan: launch a PC (unless an approved epic plan exists); Sean approves it
+- [ ] Epic plan: launch a PC (unless an approved epic plan exists); reviewer approval makes it final
 - [ ] Order stories from the dependency graph
 - [ ] Per story: launch SC -> SC done -> record follow-ups -> tear SC down -> next story
 - [ ] End-of-epic live verification (orca-pipeline stage 6 list)
@@ -28,9 +28,10 @@ Epic <id>:
 ```
 
 1. Read every story for its shape, not its implementation detail.
-2. No approved epic plan? Launch a PC (roles.md, Planning). Take its final plan to Sean.
+2. No approved epic plan? Launch a PC (roles.md, Planning). Its reviewer-approved plan is final; Sean
+   has no plan-approval step.
 3. Set the order from the dependency graph.
-4. Sean's approval of the epic plan is approval to run the whole epic. Start each story as soon as
+4. The approved epic plan is the go-ahead for the whole epic. Start each story as soon as
    its dependencies are merged; don't ask per story. Goal: the epic runs story to story to completion
    without Sean, stopping only at a human gate (below).
 5. Run **one SC at a time** unless Sean says otherwise. Each SC gets its own workspace (SC
@@ -45,21 +46,22 @@ informs; don't wait for a reply.
 
 **Human gates** (stop the affected work and ask Sean; everything else proceeds):
 - Major drift (below).
-- A CRITICAL finding (panel-review.md, CRITICAL halt).
+- A CRITICAL finding (panel-coordinator.md, CRITICAL halt).
 - Any AWS deploy or AWS write, staging included: the gate is Sean's OK on the approval card of a sitting (agents then run
   `hous aws apply|run`). Packages READY before the switch (`hous help aws apply` succeeding) finish with `hous pkg run`,
   including the writes their Waivers section names; nothing new uses that path. Every other step only Sean can do
   (`operating-household-aws` skill).
 - A blocking finding still open after 3 panel rounds, a disputed well-formed HIGH, or a test budget
-  overrun (panel-review.md).
+  overrun (panel-coordinator.md).
 - A plan question only Sean can answer (the PC asks him before finalizing).
 Watch host load (`uptime`). If it thrashes, pause new launches and tell Sean.
 
 ## Planning: the full epic up front
 The PC plans every story to acceptance criteria in one epic plan, with all of Sean's questions
-answered before it is final, and Sean approves it once.
+answered before it is final. The reviewer's approval makes it final; Sean answers questions, he does
+not approve the plan.
 - Never defer a story's planning to its start, and never replace the epic plan with skeletons to
-  plan later; that hides the epic's real shape from Sean's approval.
+  plan later; that hides the epic's real shape from the plan review.
 - Staleness is handled by each SC's drift-check, against the existing plan.
 
 ## Story Coordinator
@@ -127,18 +129,3 @@ Nobody in the pipeline files follow-up tickets on Sean's behalf: not the SC, not
 - **SC:** its own ledger (orca-pipeline, Cleanup).
 - **EC:** release each finished SC's and PC's seat (they can't release themselves after reporting
   done), remove the SC's workspace (`worktree rm`; release alone leaves it), and run a final sweep.
-
-## Common mistakes
-
-| Mistake | Fix |
-|---|---|
-| Running the whole epic from one coordinator | Split EC/SC; the EC holds no story detail |
-| A coordinator coding, testing, planning or taking over a seat | Coordinators coordinate only; one warning, then replace (roles.md) |
-| An SC adjusting its own plan slice | Minor drift goes to a PC; major drift to the EC and Sean |
-| Waiting for Sean between stories | The approved epic plan is the go-ahead; stop only at a human gate |
-| Skeleton / just-in-time planning | A PC plans the full epic up front; the drift-check handles staleness |
-| More than one SC at a time without Sean's say-so | One SC at a time |
-| SC filing its own follow-up tickets | Return them to the EC |
-| EC filing follow-up tickets during or at the end of the epic | Track them; present the list to Sean when the last story completes; file only what he picks |
-| Proposing a new ticket for a non-critical item | Suggest adding it under HOUS-590 (after checking it isn't already there) |
-| Releasing an SC seat but leaving its workspace | `worktree rm` too |

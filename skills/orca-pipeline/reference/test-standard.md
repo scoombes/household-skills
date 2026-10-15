@@ -4,7 +4,7 @@ Applies only to things that run: application and infrastructure code, scripts, a
 blocks in runbooks and gate packages. Prose, guides and evidence docs get no tests.
 
 The question for every test: could a wrong implementation pass it? Implementers apply this list before
-opening the PR; reviewers enforce it. Stay inside the plan's test budget (see panel-review.md,
+opening the PR; reviewers enforce it. Stay inside the plan's test budget (see panel-coordinator.md,
 Proportion): this list makes each test count, it is not a reason to add more.
 
 1. **Mutation proof per test**, including each `it.each` case: name the wrong implementation it catches.

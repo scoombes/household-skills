@@ -28,7 +28,7 @@ Seats never message Sean.
 | Supervises | The PCs and SCs it launched | Its plan seats | The seats and PCs it launched |
 
 Every coordinator may message Sean directly. In a CRITICAL halt, only the top coordinator sends the
-push notification (panel-review.md, CRITICAL halt).
+push notification (panel-coordinator.md, CRITICAL halt).
 
 ## Outputs
 Every role ends with `worker_done` (seats, PC, SC) or a report to Sean (EC): a 3-sentence summary
@@ -60,7 +60,7 @@ Questions: the PC collects every question raised by the author, the reviewer or 
 grouped list and asks Sean directly, all at once, before finalizing. Answers go into the plan with
 Sean's words recorded; the author revises and the reviewer re-checks the affected parts. If an answer
 changes scope, the whole plan goes back through the reviewer. Only then does the PC hand back the
-final plan. The epic plan also goes to Sean for approval.
+final plan. No plan, the epic plan included, waits for Sean's approval.
 
 ## A coordinator caught doing seat work
 The supervisor acts: the EC for its SCs and PCs, the SC for its PCs, Sean for the EC.

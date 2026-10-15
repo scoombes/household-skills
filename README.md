@@ -2,14 +2,14 @@
 
 Custom agent skills for HouseHold development and operations, plus useful resources for writing and maintaining them.
 
-This repository contains three HouseHold skills from the existing setup, along with their eight supporting guides. The installed copies remain in their current locations.
+This repository contains three HouseHold skills from the existing setup, along with their ten supporting guides. The installed copies remain in their current locations.
 
 ## Skills
 
 | Skill | Purpose | Supporting guides |
 | --- | --- | --- |
-| [Operating HouseHold AWS](skills/operating-household-aws/SKILL.md) | HouseHold AWS operating rules and approval procedures. | [Approval mode](skills/operating-household-aws/reference/approval-mode.md), [checks](skills/operating-household-aws/reference/checks.md), [DNS](skills/operating-household-aws/reference/dns.md), [failed stacks](skills/operating-household-aws/reference/failed-stack.md), and [traps](skills/operating-household-aws/reference/traps.md). |
-| [Orca Pipeline](skills/orca-pipeline/SKILL.md) | HouseHold's per-story development and review workflow. | [Role responsibilities](skills/orca-pipeline/reference/roles.md), [panel review](skills/orca-pipeline/reference/panel-review.md), and [test standard](skills/orca-pipeline/reference/test-standard.md). |
+| [Operating HouseHold AWS](skills/operating-household-aws/SKILL.md) | HouseHold AWS operating rules and approval procedures. | [Approval mode](skills/operating-household-aws/reference/approval-mode.md), [cards and stops](skills/operating-household-aws/reference/cards-and-stops.md), [checks](skills/operating-household-aws/reference/checks.md), [DNS](skills/operating-household-aws/reference/dns.md), [failed stacks](skills/operating-household-aws/reference/failed-stack.md), and [traps](skills/operating-household-aws/reference/traps.md). |
+| [Orca Pipeline](skills/orca-pipeline/SKILL.md) | HouseHold's per-story development and review workflow. | [Role responsibilities](skills/orca-pipeline/reference/roles.md), [panel review](skills/orca-pipeline/reference/panel-review.md), [panel coordinator rules](skills/orca-pipeline/reference/panel-coordinator.md), and [test standard](skills/orca-pipeline/reference/test-standard.md). |
 | [Coordinating Epics](skills/coordinating-epics/SKILL.md) | HouseHold's coordination of work across multiple stories. | Shares the pipeline's [role responsibilities](skills/orca-pipeline/reference/roles.md). |
 
 The `orca-cli`, `orchestration`, and `computer-use` skills belong to Orca IDE and remain external dependencies. Other references to `household-infra` and `housetools` remain in those repositories.
