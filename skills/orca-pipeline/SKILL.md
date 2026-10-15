@@ -146,8 +146,8 @@ get the full pipeline.
 
 ## Seat models
 
-Every launch names model AND effort explicitly; defaults drift. `haiku` does not support effort, but the
-launch tools require the flag: pass `medium` and expect it to have no effect. Confirm what applied
+Every launch names model AND effort explicitly; defaults drift. Orca rejects any effort for `haiku`
+(1.4.224: "does not support effort"), so Claude seats use `sonnet` at `medium` instead. Confirm what applied
 (`hous worker status`, or `launch.effective` in the `worker-start` receipt) before relying on the seat.
 State each seat's model+effort in the kickoff status.
 
@@ -156,7 +156,7 @@ State each seat's model+effort in the kickoff status.
 | Frontier (only plan author, or when Sean opts in) | `fable` (claude-fable-5-1) | `gpt-6-astra` |
 | Heavy (automated ceiling) | `opus` (claude-opus-5-5) | `gpt-6.1-sol` high/xhigh |
 | Balanced | `sonnet` (claude-sonnet-5-5) | `gpt-6.1-sol` low/medium (fallback `gpt-5.6-terra`) |
-| Fast | `haiku` (claude-haiku-4-5-20251001) | `gpt-6-luna` |
+| Fast | `haiku` (claude-haiku-5-5; not launchable as a seat, see above) | `gpt-6-luna` |
 
 Claude effort (per Anthropic's Opus 5.5 / Sonnet 5.5 guidance):
 - Never above `high` for Claude seats. At `xhigh`/`max` Sonnet starts its own review rounds and extra
@@ -169,8 +169,8 @@ Claude effort (per Anthropic's Opus 5.5 / Sonnet 5.5 guidance):
 
 Assignment:
 - PR panel reviewers, every round: `opus` (high) + `gpt-6.1-sol` (high/xhigh), regardless of diff size.
-- Implementer: `haiku` when the plan contains the complete code or the fix is single-file mechanical;
-  `sonnet` for multi-file/integration/debugging or prose specs; `opus` for design judgment.
+- Implementer: `sonnet` (`medium`) when the plan contains the complete code or the fix is single-file
+  mechanical; `sonnet` (`high`) for multi-file/integration/debugging or prose specs; `opus` for design judgment.
 - Single (non-panel) reviewers: at least balanced tier; scale to diff risk.
 - Stuck fix loop: next fix seat goes one tier up (and from `medium` to `high`). At the Claude ceiling
   (`opus` high) use a fresh seat, never higher effort or frontier. Codex seats may raise effort.
