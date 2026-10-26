@@ -34,7 +34,9 @@ Household-Production-Guardrails: no changes, nothing to apply
 
 No staging copy: Household-Production-SiteEdge. Your OK on this card applies them without a staging run.
 Templates: household-infra commit 8c57685bc4683769ba8d34ae53ff1f23ff670d85, build-templates run 7001.
-Reply OK to apply exactly these changes.
+To apply exactly these changes, choose one:
+Approve production-20261009T140000Z-0a1b2c fb3415602630
+Reject
 ```
 Reading it: `REPLACED or DELETED` lines come first for a stack (`new stack, N added` marks a CREATE). `Staging: no staging copy` is the standing
 rule for the management stacks and production SiteOrigin and SiteEdge: Sean decided that his OK on a card carrying that line is enough. Identity, Guardrails and Foundation
@@ -42,7 +44,20 @@ have a staging copy and get `Staging: verified at this commit`. A stack with a k
 prints `  parameter CertificateArn kept at its previous value`: the value is not changed and never shown. A first create of such a stack is refused by `plan.sh` (a first create needs the operator route).
 
 A `run --card` card reads: `AWS writes outside CloudFormation for <env> (<account>)`; then per step `Step n: aws <service> <op> ... (<region>)`, its `Before:` read with
-what was seen now, its `After:` read; `DELETE: step n ...` lines first when a step deletes; `Run as: <caller>`; `Reply OK to run exactly these commands.`
+what was seen now, its `After:` read; `DELETE: step n ...` lines first when a step deletes; `Run as: <caller>`; then `To run exactly these commands, choose one:`, `Approve <card id> <12 hex>` and `Reject` (the picker's two options).
+
+A schema card (`run --card` with `dsql-proof.apply-step` entries) reads: `AWS writes outside CloudFormation for staging (<account>)`; then every statement that drops
+something, first, as `DROPS: entry n <file>: <reason>` (a practice run's own scratch table or schema, or a constraint the same entry added, validated and renamed into
+the dropped one's place; anything else says `reason not recognized by hous; read the SQL below before OK`: read it before showing the card); the IRREVERSIBLE notice;
+the cluster ARN and endpoint and both pins; per entry the step id, `practice run` or `live; requires practice run n PASS`, the full `fromDigest → toDigest`, the
+statement counts and the result path, and under each live entry every statement in order (cut at 300 characters with `...`; the card JSON keeps them whole);
+`Run as: <caller>; database schema role: ...; runtime role: ...`; then `To run exactly these operations, choose one:`, `Approve <card id> <12 hex>` and `Reject`. Show it unedited; it goes to Sean exactly as printed.
+
+## Sitting summaries
+The combined summary prints every child in execution order, without truncating its content, plus each id and whole immutable-card hash.
+Sean's one reply covers exactly that list, not other cards with matching stack names. The summary must exist in full before the reply.
+Use `hous aws sitting apply` to execute it; do not OK or apply its children separately. Any failed child/read-back or interrupted apply spends
+the summary and stops the remaining list. A replacement or later-built card needs a new summary and a new OK. Production stays separate.
 
 ## When a verb stops
 | Message (start of it) | Meaning and what to do |
@@ -50,6 +65,9 @@ what was seen now, its `After:` read; `DELETE: step n ...` lines first when a st
 | `no AWS session for household-<env>: ask Sean to run hous aws login ...` (exit 4) | Rule 2. Wait for Sean. |
 | `STOP: caller <arn> is not an Identity Center session in the <env> account <id>` | Wrong profile or account. Stop; Sean signs in to the right one. |
 | `unknown option`, `--task is required`, `--go must hold Sean's sitting OK`, `name at least one stack`, `<Stack> is named twice` (exit 2) | Fix the call; the usage line follows. |
+| `--words must be the approval label printed on <id>, exactly as chosen in the picker: nothing was recorded (Reject, typed text or any other words are not an OK)` (`ok`, exit 2; `tools/aws/src/approval.ts:15`, `tools/aws/README.md:358`) | Nothing was recorded. Stop: Sean chose `Reject`, or the reply is not the exact `Approve <id> <12 hex>` label the card or summary printed (no trimming, case folding or partial hash). Never reword or replay it; ask again only with the card or summary shown in full. |
+| `--go must be the sitting OK's approval label, exactly as chosen in the picker: Approve <env> <scope words> (a refusal, a deferral or any other text is not an OK)` (`plan`, `run --card`, `inbox-ownership`, exit 2; `tools/aws/src/approval.ts:27`, `tools/aws/README.md:359`) | Nothing ran. The env in the label must be exactly the run's env. Only the picker's `Approve <env> <scope words>` is a sitting OK; stop and ask Sean, never reword his reply. |
+| `--go names no scope: Approve <env> <scope words>` (exit 2; `tools/aws/src/approval.ts:29`) | Nothing ran. The label has the env but no scope words; ask again with the scope named. |
 | `<Stack> is not in household-infra config/targets.json`, `belongs to <x>, not <env>`, `is not selected` | Wrong stack name or env, or the stack is not deployable. Check `config/targets.json`. |
 | `--commit <sha> is not on household-infra main` | Plan a commit that is on `main`. |
 | `no build-templates artifact cdk-out-<sha> (absent or expired)` | Wait for the `build-templates` run of that commit, or re-run it. Never build templates locally. |
@@ -67,7 +85,7 @@ what was seen now, its `After:` read; `DELETE: step n ...` lines first when a st
 | `plan: refused: <Stack> is new and its parameter(s) ... have no Default: a first create needs the operator route` | A first create of a stack with a required parameter is not a `plan` job. Stop; tell Sean. |
 | `scripts/deploy/plan.sh kept ... but <Stack> is planned as CREATE` | Same cause. Stop and report. |
 | `deleted change set <arn>` / `could not delete change set ...; delete it before planning again` | A refused plan cleans up after itself; on the second message delete the named set (a `run` plan on its own card) before planning again. |
-| `card <id> has no recorded OK` | Show the card, then `hous aws ok`. |
+| `card <id> has no recorded OK` | Show the standalone card or complete sitting summary, then record Sean's reply with `hous aws ok`. A general sitting go-ahead is insufficient. |
 | `card <id> is <state>, not shown; an OK is recorded once` (`ok`) | The OK is already recorded or spent. Plan again for a new card. |
 | `card <id> was already applied`, `failed earlier`, `is a write plan: run it with hous aws run --apply` | An OK is spent once. Plan again, or use the other verb. |
 | `change set <arn> is missing`, `is not AVAILABLE`, `was re-created since the card`, `changed since the card`, `the live template changed since the card` | Something moved after Sean's OK. Nothing ran. Plan again for a new card and a new OK. |
@@ -85,3 +103,17 @@ what was seen now, its `After:` read; `DELETE: step n ...` lines first when a st
 | `step n ran, but its after read failed` | The write happened and later steps did not run. Read the live state before anything else. |
 | `aws <service> <op> is not a read; hous aws read runs reads only`, `unregistered AWS operation` | Use a supported read. A new read operation needs a housetools change. |
 | Hook deny: `AWS write <service> <operation>: writes run only through hous aws apply|run after Sean's OK` | A direct write. Do not retry or rephrase. Use the verb. `bash -c`, scripts and `python -c` are not inspected by the hook; they are still forbidden. |
+| `step n: live entry must immediately follow its matching rehearsal` | Repair the schema plan's order or `rehearsalStep`, then `run --card` again; nothing ran. |
+| `step n: fromDigest does not continue the preceding live toDigest` | The selected steps are out of order. Repair the plan and make a new card; a dry run grants no permission to skip a step. |
+| `DSQL apply-step supports staging only` / `unsupported DSQL operation, mode or field` | Correct the fixed shape. There is no override and no argv route. |
+| `step n: checkout is dirty` / `checkout HEAD differs from pinned commit` / `... is not on the checkout's origin/main` | Restore the scratch clone at its pin (refresh `origin/main` through the App helper), then `run --card` again. Never work around it. |
+| `step n: output path already exists` | Keep the old evidence. Make a new card (it gets fresh result paths). |
+| `step n: dry-run produced no valid JSON` / `step n: dry-run failed` | The tool could not plan the step offline; its streams are in the run's `dsql/dryrun/`. Fix the input or invocation before any card. |
+| `card <id>: execution marker already exists; this OK is spent` | An apply already claimed this card. Do not delete the marker or retry: read the evidence, triage, then a new card and a new OK. |
+| `step n: rehearsal did not PASS including cleanup` / `step n: apply-step failed or evidence is incomplete` | That operation failed; nothing later ran and the card is spent. Read the ledger (`--verify-only` under the sitting OK) and follow the run sheet's recovery: recovery SQL is Sean's, in his viewer; then a new card and a new OK. |
+| `step n: the offline plan differs from card time` / `step n: <field> differs from card time` | The checkout or target moved after the OK. Nothing ran. Make a new card and get a new OK. |
+| Hook deny: `dsql-proof apply-step writes run only through hous aws run --apply after Sean's card OK (live and rehearse)` | A direct schema write. Do not retry or rephrase; use the schema card. |
+| `card <id> is owned by sitting <sitting>`, `card <id>: child hash differs from the approved summary`, `card <id> is not listed in sitting <sitting>`, `card <id> is card n of sitting <sitting>; the next card is ...` | No standalone child execution or membership substitution. Stop; a changed or later card needs a new complete summary and OK. |
+| `sitting <id>: sitting execution marker already exists`, `card <id>: its sitting claim already exists`, `sitting <id> failed at card ...`, `sitting <id> failed earlier`, `sitting <id> was stopped`, `sitting <id> is applied` | No retry or resume. Read evidence; recovery and replacement need a fresh summary/card and OK. |
+| `sitting <id> changed since it was shown` (`ok`), `sitting <id> changed after the OK` (`sitting apply`) | No OK was recorded, or nothing ran. Seal a new complete summary and show it. |
+| `<file> has no hous aws check receipt for its current content`, `the hous aws check receipt for <file> is stale` | Run the offline check; no AWS call is allowed to begin until its receipt matches. |

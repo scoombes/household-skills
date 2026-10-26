@@ -1,7 +1,9 @@
 # Failed or stuck stack
 
 Reads only, under SKILL.md rules 1–4 and Sean's OK for the sitting. No retry, delete or rollback until Sean's OK on a stated plan.
-In approval mode a recovery write is a `hous aws run` write plan on its own card and OK (step 5). The card is spent either way, so plan again after triage.
+In approval mode a recovery write is a `hous aws run` write plan on its own card and fresh OK (step 5). The card is spent either way.
+If it belonged to a sitting summary, that summary is spent too and all remaining children stop. Recovery is excluded from summaries;
+replacement or later-built cards need a new summary/card and new OK after triage, never the failed sitting's reply.
 - After a script or deploy failure, `hous aws apply` already printed the failed stack's status and failed events and marked the card failed; later stacks did not run.
 - After `the change sets were executed, but a read-back failed`, every stack is deployed and the card stays `applied`. `apply` printed the `FAIL` lines
   but no status or events, so step 1 below is yours to run, for the stack named on each `FAIL` line.
