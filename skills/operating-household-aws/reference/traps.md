@@ -29,3 +29,6 @@ Number = trap number in the old guide's §(b) (`household-infra/docs/runbooks/ag
 24. A package's assumed base template can be stale (a staging deploy was skipped). Read the live template first (checks.md step 3).
 25. An HTTP API answers 404 where a REST API answers 403. Check the API type before asserting a status code.
 26. A schema refresh with the worker's queue feed on dead-letters its tick messages (HOUS-618, 2026-10-10). End the sheet with the DLQ depth read and a decision.
+27. Schema-chain cards: after a live DDL step, the next entry's practice preflight can refuse on a short-lived "pending household DDL job" and spend the card (HOUS-573, 2026-10-20). Put each live step on its own card, or run a `--verify-only` read showing `pending-household-jobs: none` before the next card.
+28. Dead-letter reads in a run sheet: record the known depth before the sitting and pair the depth read with the oldest-message age (`ApproximateAgeOfOldestMessage`), so known old messages pass and only a new one stops (HOUS-573, 2026-10-20).
+29. Web or app rows that need a sign-in: the run sheet names, for each such row, who types it, at which step and from where (Sean in the browser or app at step N using his tester list, or a protected in-process route; never argv), and Sean's directions name the Orca workspace and tab (HOUS-656, 2026-10-23).

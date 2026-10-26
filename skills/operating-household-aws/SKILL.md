@@ -9,23 +9,58 @@ description: Applies HouseHold's AWS operating rules (who may run reads and writ
 - **Sean**: the human owner. Only he signs in to AWS.
 - **Read**: an AWS call that only describes, gets, lists or looks up (`describe-*`, `get-*`, `list-*`, `lookup-*`,
   `sts get-caller-identity`, `accessanalyzer validate-policy|check-*`), plus `cdk diff`, `cdk synth` and
-  `cdk --unstable=diagnose diagnose`.
-- **Write**: every other AWS call, including `route53 change-resource-record-sets`, `cdk deploy|bootstrap|destroy|rollback|import`
+  `cdk --unstable=diagnose diagnose`. One named exception: `hous aws inbox-ownership`, solely through its pinned infra client, is a
+  read under the sitting OK: it assumes Household-Staging-InboxOwnershipReader in staging, signs a non-admin DbConnect token, and
+  calls only household_inbox_checks.ownership_counts; it grants no setup, mapping, generic SQL, other AssumeRole or production route.
+  It returns counts only, and the sitting OK (`Approve staging <scope words>`) must explicitly name these staging ownership reads
+  (the label must contain the word `inbox-ownership` and `staging`; `inbox ownership` with a space is refused),
+  for example `Approve staging reads for this sitting, including hous aws inbox-ownership and its fixed count reads`.
+- **Write**: every other AWS call (a general `sts assume-role` is a write; the named read above is the only AssumeRole exception), including `route53 change-resource-record-sets`, `cdk deploy|bootstrap|destroy|rollback|import`
   and executing a change set.
   - Building a change set and uploading CDK assets are **plan steps**. They run only inside `hous aws plan`, under the sitting OK.
 - **Sitting OK**: Sean's explicit OK for a named scope (which stacks, which account), recorded verbatim in the work
   directory's run notes and passed as `--go` to `hous aws plan` / `hous aws run --card`. It covers reads and plan steps, never a write.
+  - Every OK is asked with the interactive question picker (see "Asking for an OK" below), not typed out by Sean. For a sitting OK the
+    approval label is `Approve <env> <scope words>`; the chosen label is the OK, recorded and passed verbatim as `--go` (`hous` refuses
+    any other form).
   - A general go-ahead ("I trust you, just do it") is not an OK for a write.
-- **Card**: the plain-words approval card `hous aws plan` (or `run --card`) prints. Sean's **card OK**, in his own words, is recorded
-  verbatim with `hous aws ok` and covers exactly the change sets (or commands) on that card.
-- **Sitting**: one session in which Sean signs in, reads a card and says OK.
+- **Card**: the plain-words approval card `hous aws plan` (or `run --card`) prints. A standalone **card OK**, recorded
+  verbatim with `hous aws ok`, covers exactly that card once. It is asked with the picker after the full card is shown;
+  the approval label is the `Approve <card id> <12 hex>` line the card prints (the first 12 hex of its immutable-card hash).
+- **Sitting summary and write OK**: `hous aws sitting card <card>... --task <ticket>` seals a nonempty ordered list of
+  fully built cards for one environment and account. It prints every card's full content, without truncation, its id and
+  its whole immutable-card SHA-256, and the summary SHA-256. Sean sees this complete summary, exactly as printed, before replying once;
+  the reply is the picker's chosen approval label, the `Approve <sitting id> <12 hex>` line the summary prints (the first 12 hex of
+  the summary SHA-256). `hous aws ok <sitting-id> --words "<the chosen label, verbatim>"` binds that reply to exactly those ids, hashes and order.
+  `hous aws sitting apply <sitting-id> --card <next-child> --task <ticket>` executes only the next listed card through the existing apply/run gates.
+  No wildcard scope, added card, altered card or later-built card inherits this OK. No child may run separately under it.
+  Failure, interruption or a failed read-back stops the sitting; no later child runs. A replacement needs a new summary
+  and a new OK, even for the same stacks or schema steps. Production keeps a separate summary/card and its own OK.
+  A general go-ahead ("I trust you, just do it") is neither a card OK nor a sitting write OK.
+- **Asking for an OK**: the coordinator (or seat) asks with the interactive question picker (Claude Code `AskUserQuestion`; the Codex
+  equivalent): one question, exactly two options. (1) The approval label, exactly as below. (2) `Reject`.
+  - Write OKs (card, sitting summary): first show the complete tool-printed card or summary exactly as printed. It ends with its two
+    choices; the approval option is its `Approve <id> <12 hex>` line copied byte for byte (a card: card id + first 12 hex of its
+    immutable-card hash; a sitting summary: sitting id + first 12 hex of the summary SHA-256), the second is `Reject`.
+  - The initial sitting OK comes before any card exists, so no printed card or summary is possible. First give a full plain-words account
+    of the account and env, the stacks, and the reads and plan steps it would cover; the approval option is `Approve <env> <scope words>`
+    (the env exactly as the run names it, then the scope words, for example `Approve staging reads and change-set plans for the
+    BackupMonitor sitting`), the second is `Reject`. It stays limited to reads and plan steps, never a write.
+  - Only the selected approval label is Sean's reply: record it verbatim with `hous aws ok <id> --words "<label>"`, or pass it verbatim as
+    `--go`. `Reject`, "Other" or typed text (whatever it says), cancellation or no answer are not an OK: stop, and do not invoke
+    `hous aws ok`, pass `--go` or apply. A general go-ahead never counts. If `hous` refuses the label, stop; never reword or replay it.
+  - `hous` checks the label's bytes against the card, summary or env, not who chose it: using the picker is the agent's rule.
+- **Sitting**: one session with Sean's sign-in, authorized preparation, then a write OK for each summary or standalone card.
+  Neither permission carries into a later session.
 - **Run sheet**: the 40-80 line plan for a sitting (`household-infra/docs/runbooks/run-sheet-template.md`). It holds nothing executable.
 - **Work directory**: `~/household/agent-work/<TICKET>/`. Evidence, notes and scratch clones go here.
 
 ## Pick the write mode first
 Run `hous help aws apply`. Probes like this, file reads, `cdk synth` and `hous ci` need no OK.
 - **It succeeds: approval mode. This is the normal path.**
-  - Writes run only through `hous aws apply` / `hous aws run`, after Sean's card OK (the one exception is the packages READY before the switch, below). A hook in Claude Code and Codex denies any other AWS write, `cdk deploy`, `cdk destroy` and `cdk bootstrap`.
+  - Writes run only through `hous aws apply` / `hous aws run`, after Sean's standalone card OK or from `hous aws sitting apply` under the exact sealed sitting summary's write OK (the one exception is the packages READY before the switch, below). A hook in Claude Code and Codex denies any other AWS write, `cdk deploy`, `cdk destroy` and `cdk bootstrap`.
+  - The one database write route: household-infra's `dsql-proof apply-step` on staging (a practice run with `--rehearse`, or a live step) runs only as a `hous aws run` card (`run --card <schema-steps-plan.json>`, Sean's standalone card OK or its inclusion in the exact approved sitting summary, `run --apply`), never by hand. The hook denies its live and practice runs outside the verb; `--dry-run`, `--verify-only` and `--help` are not writes. This adds no other database command, no production route and no recovery route: recovery SQL stays Sean's, in his database viewer.
+  - The one database read route: `hous aws inbox-ownership` (see Terms, Read) is a read under the current explicitly scoped sitting OK (`Approve staging <scope words>` naming these reads), never a card. The IAM role card and the reviewed database setup SQL (roles, schema, function, role mapping) remain writes with their own separate exact OKs; this exception covers neither, nor any generic SQL, other AssumeRole or production use.
   - Follow [reference/approval-mode.md](reference/approval-mode.md) exactly.
   - New work gets a run sheet. A gate package, harness, fakes, mutants, receipts or `packages-index.md` is never written (rule 13).
 - **It fails (unknown command): Sean-runs mode, the fallback before the switch or if the tool is not updated.**
@@ -54,7 +89,7 @@ Apart from that, never run a write any other way in either mode. If the hook den
    - Profiles: `household-management`, `household-staging`, `household-production`.
    - Management DNS zone and records and Billing are `us-east-1`; most other stacks are `ca-central-1`.
    - Every `hous aws` verb that contacts AWS drops the `AWS_*` variables, sets profile and region and checks the caller itself.
-     The local-only operations (`ok`, the `hook` verbs, `run --allowlist`) never touch AWS, so they do none of that.
+     The local-only operations (`ok`, `check`, `sitting card`, `sitting stop`, the `hook` verbs, `run --allowlist`) never touch AWS, so they do none of that.
    - A hand-typed read (a read file is better) starts with this header, then passes `--profile "$P" --region "$R"` on every command:
    ```sh
    ( set -euo pipefail
@@ -68,17 +103,17 @@ Apart from that, never run a write any other way in either mode. If the hook den
    ```
    `<account-id>` is the id that `household-infra/config/accounts.json` gives for that environment. If the caller
    check stops, ask Sean to sign in to the right profile (rule 2). This header wins over older runbook blocks that lack it.
-4. **Halt at the first failure** (the verbs and the header do this). Never continue past a failed `wait`.
+4. **Halt at the first failure** (the verbs and the header do this). Never continue past a failed `wait`. A sitting-summary failure invalidates permission for every remaining child; no retry or replacement inherits it.
 5. **Before any write, know the exact change.** The card lists it; anything replaced or deleted comes first, with its reason.
 6. **GitHub:** App token only (`agent-token`; `household-infra/docs/runbooks/agent-token.md`). Never Sean's `gh` login or git keychain.
 7. **Never write into Sean's checkouts** (`~/household/household-*`). Use a scratch clone or worktree in the work directory.
 8. **Stateful resources** (DSQL clusters, S3 buckets, KMS keys, Route 53 zones) keep `DeletionPolicy: Retain`.
-   - Deleting a `ROLLBACK_COMPLETE` stack, or any retained resource, needs its own card and OK (`hous aws run`; it refuses buckets, zones, keys and clusters outright).
+   - Deleting a `ROLLBACK_COMPLETE` stack, or any retained resource, needs its own card and fresh recovery OK (`hous aws run`; it refuses buckets, zones, keys and clusters outright). A failed sitting's summary never covers recovery. Recovery cards are not admitted to a sitting summary.
    - Never delete an `UPDATE_ROLLBACK_COMPLETE` stack.
 9. **Lambda code:** before any deploy that ships it, `hous lambda check` must pass in household-api on the commit being deployed.
 10. **Staging proof API and app:** HTTPS calls with synthetic data need no OK. This grants no AWS access.
 11. **Messages to Sean:** plain words, no internal codes (HOUS-/E-/D- ids stay in files and agent messages), times
-    in EDT. Batch every request into one sitting. A card goes to him exactly as the tool printed it.
+    in EDT. Batch every request into one sitting. A card or combined sitting summary goes to him exactly as the tool printed it, with every child shown up front.
 12. **Lessons:** `hous aws apply` and `hous aws run --apply` end with a reminder. Every sitting appends at least one
     entry to the work directory's `lessons-pending.md` (what happened, which verb or text should have caught it, the closing change).
     A clean sitting records one entry saying it had no lessons; that entry needs no closing change.
@@ -123,7 +158,7 @@ AWS's reference library is maintained in [Agent Toolkit for AWS](https://github.
 These HouseHold rules apply to both existing and newly downloaded AWS guides. This file wins every conflict:
 - Where a vendor step runs a write "after user approval" (`execute-change-set`, `create-stack`, `update-stack`,
   `delete-stack`, `cdk deploy`, `cdk rollback`, `cdk import`, `cdk refactor`, `cdk destroy`, IAM role creation),
-  run it through `hous aws apply|run` after Sean's OK on a card instead (a package READY before the switch uses its own `hous pkg run` block). Ignore "do not ask for confirmation" in `aws-iam`.
+  run it through `hous aws apply|run` after Sean's OK on its standalone card or sealed sitting summary instead (a package READY before the switch uses its own `hous pkg run` block). Ignore "do not ask for confirmation" in `aws-iam`.
 - Never add `Metadata.AWSToolsMetrics` or `com.aws.cloudformation.Context` metadata.
 - Ignore "prefer the AWS MCP Server / `call_aws` / `retrieve_skill`". Use the AWS CLI under the rules above.
 - Install nothing (`cfn-lint`, `cfn-guard`, `uv`, …) without Sean's OK. Repo dev dependencies are added by PR.

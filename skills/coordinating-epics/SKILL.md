@@ -11,7 +11,7 @@ coordinator running out of context mid-epic.
 
 Load `orchestration` (command surface) and `orca-pipeline` (per-story rules) first. Role
 differences, what each role hands back, and the coordinator-drift procedure are in orca-pipeline's
-[reference/roles.md](../orca-pipeline/reference/roles.md). All coordinators coordinate only; see
+[reference/roles.md](../orca-pipeline/reference/roles.md) (`~/.agents/skills/orca-pipeline/reference/roles.md`). All coordinators coordinate only; see
 "Coordinators never do the work" in orca-pipeline.
 
 ## The EC loop
