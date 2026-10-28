@@ -2,7 +2,7 @@
 
 Custom agent skills for HouseHold development and operations, plus useful resources for writing and maintaining them.
 
-This repository contains three HouseHold skills from the existing setup, along with their ten supporting guides. The installed copies remain in their current locations.
+This repository is the source of truth for three HouseHold skills and their ten supporting guides. Edit them here first, then install them with `hous skills sync` (housetools), which copies the selected skills into `~/.agents/skills`. Never edit the installed copies directly: `hous skills status` reports such edits as conflicts and `hous skills sync` refuses to overwrite them until the change is made here.
 
 ## Skills
 
@@ -59,4 +59,4 @@ Validate format and file references, then try representative requests: one that 
 | [OpenAI: testing skills with evaluations](https://developers.openai.com/blog/eval-skills) | Testing activation and observable outcomes with representative prompts. |
 | [Agent Skills specification](https://agentskills.io/specification) | The shared format, naming rules, frontmatter, and directory conventions. |
 
-Resource links checked on 12 October 2026. Follow the current host documentation when installing skills; storing them under this repository's `skills/` directory does not automatically make them available in other HouseHold repositories.
+Resource links checked on 12 October 2026. Storing a skill under `skills/` does not by itself make it available to agents: `hous skills sync` installs the selected skills into `~/.agents/skills` (Codex reads that directory; Claude Code reads it through the `~/.claude/skills/<name>` links, which `hous skills status` checks but never creates). `hous skills status` shows what differs and `hous skills sync --dry-run` previews a sync without writing. The sync is local and one-way: it never fetches, pulls or pushes, installs the working tree of this checkout, refuses a checkout that is behind its last-fetched `origin/main`, and leaves the external AWS guides (`vendor/`), evaluation files and Orca-owned skills in place.
