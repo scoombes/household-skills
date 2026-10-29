@@ -247,3 +247,7 @@ Around 15+ consecutive xcodebuild/simulator cycles leak CoreSimulatorService pro
 Watch `uptime` on sim-heavy runs. Recovery needs `killall CoreSimulatorService`, which agents may not
 run: pause the seat between runs and escalate to Sean; never interrupt a running xcodebuild. Treat odd
 simulator/launch errors right after recovery as environmental, not code defects.
+
+## Changing this skill
+
+Edit this skill only in the household-skills repo (`skills/orca-pipeline/`), merge it, then run `hous skills sync`. Never edit the installed copy under `~/.agents/skills` or `~/.claude/skills`: sync reports that as a conflict and refuses to run until the change is made in the repo.
