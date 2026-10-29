@@ -59,7 +59,7 @@ and every write statement is shown in full, never cut, with the identities, both
 ## Sitting summaries
 The combined summary prints every child in execution order, without truncating its content, plus each id and whole immutable-card hash.
 Sean's one reply covers exactly that list, not other cards with matching stack names. The summary must exist in full before the reply.
-For a database refresh the order is fixed: writer-stop cards, reset-init, apply-init, the numbered apply-step cards, verify-init, then the release, setup and seed cards. Sean sees every one of them, in that order, before replying.
+For a database refresh the order is fixed: writer-stop cards, reset-init, apply-init, the numbered apply-step cards, verify-init, then the release and seed cards. Sean sees every one of them, in that order, before replying. Inbox setup is not a card and never a child of the summary: it is Sean's separate action in his own terminal, after verification, under its own separate exact OK.
 Use `hous aws sitting apply` to execute it; do not OK or apply its children separately. Any failed child/read-back or interrupted apply spends
 the summary and stops the remaining list. A replacement or later-built card needs a new summary and a new OK. Production stays separate.
 
