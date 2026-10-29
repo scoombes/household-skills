@@ -136,4 +136,4 @@ Nobody in the pipeline files follow-up tickets on Sean's behalf: not the SC, not
 
 ## Changing this skill
 
-Edit this skill only in the household-skills repo (`skills/coordinating-epics/`), merge it, then run `hous skills sync`. Never edit the installed copy under `~/.agents/skills` or `~/.claude/skills`: sync reports that as a conflict and refuses to run until the change is made in the repo.
+Edit this skill only in the household-skills repo (`skills/coordinating-epics/`), merge it, update `~/household/household-skills` to `origin/main`, then run `hous skills sync` (it reads that checkout, so it installs nothing new until the update). Never edit the installed copy under `~/.agents/skills` or `~/.claude/skills`: sync reports that as a conflict and refuses to run until the change is made in the repo.
