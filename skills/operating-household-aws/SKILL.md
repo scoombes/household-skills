@@ -59,7 +59,16 @@ description: Applies HouseHold's AWS operating rules (who may run reads and writ
 Run `hous help aws apply`. Probes like this, file reads, `cdk synth` and `hous ci` need no OK.
 - **It succeeds: approval mode. This is the normal path.**
   - Writes run only through `hous aws apply` / `hous aws run`, after Sean's standalone card OK or from `hous aws sitting apply` under the exact sealed sitting summary's write OK (the one exception is the packages READY before the switch, below). A hook in Claude Code and Codex denies any other AWS write, `cdk deploy`, `cdk destroy` and `cdk bootstrap`.
-  - The one database write route: household-infra's `dsql-proof apply-step` on staging (a practice run with `--rehearse`, or a live step) runs only as a `hous aws run` card (`run --card <schema-steps-plan.json>`, Sean's standalone card OK or its inclusion in the exact approved sitting summary, `run --apply`), never by hand. The hook denies its live and practice runs outside the verb; `--dry-run`, `--verify-only` and `--help` are not writes. This adds no other database command, no production route and no recovery route: recovery SQL stays Sean's, in his database viewer.
+  - The database write routes are five fixed families, all staging only. Each runs only as a `hous aws run` card (`run --card <plan.json>`, Sean's standalone card OK or its inclusion in the exact approved sitting summary, `run --apply`), never by hand. The hook denies their live and practice runs outside the verb; the read-only forms ([approval-mode.md](reference/approval-mode.md#what-is-in-place)) are not writes.
+    1. `dsql-proof apply-step`: one numbered schema step, a practice run then its live run.
+    2. `dsql-proof seed-catalogue`: the catalogue seed, a practice run then its live run.
+    3. `dsql-proof.reset-init`: deletes every household table and all its data; read [approval-mode.md](reference/approval-mode.md#database-refresh-cards) first.
+    4. `dsql-proof.apply-init`: recreates the schema from the target chain's `0001_init`.
+    5. `dsql-proof.verify-init`: the integrity verifier. It is a writer, not a read: it commits and removes synthetic probe rows.
+
+    Families 3-5 exist only when the installed tooling exposes them: check `hous aws run --allowlist`. If an operation is not listed, it is not available; do not improvise another way (raw writer, `--dir`, generic SQL), and wait for the tooling update.
+    This adds no other database command, no production route and no recovery route: recovery SQL stays Sean's, in his database viewer.
+  - Sean-only inbox setup: household-infra's inbox setup tool (`tools/inbox-ownership/src/setup-cli.ts`) is run by Sean alone, in his own terminal, after he has seen the full pinned command source and given its own separate exact OK. Agents run only its offline `--show-plan` and `--help`. It is not a card, an exemption or a route, and no agent executes the live setup.
   - The one database read route: `hous aws inbox-ownership` (see Terms, Read) is a read under the current explicitly scoped sitting OK (`Approve staging <scope words>` naming these reads), never a card. The IAM role card and the reviewed database setup SQL (roles, schema, function, role mapping) remain writes with their own separate exact OKs; this exception covers neither, nor any generic SQL, other AssumeRole or production use.
   - Follow [reference/approval-mode.md](reference/approval-mode.md) exactly.
   - New work gets a run sheet. A gate package, harness, fakes, mutants, receipts or `packages-index.md` is never written (rule 13).
