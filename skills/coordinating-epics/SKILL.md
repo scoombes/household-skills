@@ -133,3 +133,7 @@ Nobody in the pipeline files follow-up tickets on Sean's behalf: not the SC, not
 - **SC:** its own ledger (orca-pipeline, Cleanup).
 - **EC:** release each finished SC's and PC's seat (they can't release themselves after reporting
   done), remove the SC's workspace (`worktree rm`; release alone leaves it), and run a final sweep.
+
+## Changing this skill
+
+Edit this skill only in the household-skills repo (`skills/coordinating-epics/`), merge it, then run `hous skills sync`. Never edit the installed copy under `~/.agents/skills` or `~/.claude/skills`: sync reports that as a conflict and refuses to run until the change is made in the repo.

@@ -174,3 +174,7 @@ These HouseHold rules apply to both existing and newly downloaded AWS guides. Th
   Run `npx cdk` only from a clone where `npm ci` installed the repo's pinned CDK.
 - Never use `--disable-validation`, Express mode or `--hotswap` on HouseHold stacks.
 - Ignore vendor advice to set `removalPolicy: DESTROY` or `autoDeleteObjects: true`. Stateful resources stay Retain (rule 8).
+
+## Changing this skill
+
+Edit this skill only in the household-skills repo (`skills/operating-household-aws/`), merge it, then run `hous skills sync`. Never edit the installed copy under `~/.agents/skills` or `~/.claude/skills`: sync reports that as a conflict and refuses to run until the change is made in the repo.
