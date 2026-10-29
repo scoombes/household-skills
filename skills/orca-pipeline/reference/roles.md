@@ -23,7 +23,7 @@ Seats never message Sean.
 | Decides | Story order; how to group follow-ups for Sean | When the plan is final (reviewer approved, Sean's answers in) | Finding triage (downgrades, fix rejections), merge |
 | Never decides | Technical calls inside a story; anything at a human gate (coordinating-epics) | Anything past the final plan | Re-planning of any size (launches a PC); major drift (escalates to EC) |
 | Merges PRs | No | No | Yes, its own story's |
-| Files Jira tickets | Only follow-ups Sean picks from the end-of-epic list | No | No; hands follow-ups to the EC |
+| Files Jira tickets | Only follow-ups Sean picks from the end-of-epic list | No | No; hands follow-ups to the EC, or Sean for a standalone story |
 | Reports to | Sean | Its launcher | EC (Sean for a lone story) |
 | Supervises | The PCs and SCs it launched | Its plan seats | The seats and PCs it launched |
 
@@ -41,7 +41,7 @@ it never hands back partial work as done.
 |---|---|
 | EC | `epic-log.md`: story order, each story's state, SC/PC run IDs, decisions with Sean's exact words. A verdict-first status to Sean at each story transition. At epic end: the follow-up list (`follow-ups.md`) presented to Sean with recommended grouping, order and importance (non-critical items: suggest HOUS-590), for him to decide (nothing filed unasked); the end-of-epic verification run; a final report; its final cleanup sweep. |
 | PC | The final `plan.md`: TDD-ordered tasks, acceptance criteria, new-test estimate, Sean's answers recorded; link to the reviewer's approval. Never open questions or assumptions in place of answers. |
-| SC | Merged PR(s) with merge commits. `status.md`, kept current during the story (resume point), and at the end: what shipped, panel rounds, every downgrade/fix rejection with its reason, the end-of-epic verification list. A follow-up list for the EC (not filed). Its final cleanup sweep: ledger empty except named PR worktrees. |
+| SC | Merged PR(s) with merge commits. `status.md`, kept current during the story (resume point), and at the end: what shipped, panel rounds, every downgrade/fix rejection with its reason, the end-of-epic verification list. A follow-up list for the EC, or Sean for a standalone story (not filed): review items are collected only after both panel reviewers APPROVE, after including all retained items in any required fix round. Its final cleanup sweep: ledger empty except named PR worktrees. |
 | Investigator | `investigation.md`: root cause (file:line), mechanism, constraints any fix must respect, repro evidence. |
 | Plan author | `plan.md` as above, revised until the reviewer approves. |
 | Plan reviewer | One verdict per round: APPROVE or CHANGES_NEEDED, findings in the panel finding format. |

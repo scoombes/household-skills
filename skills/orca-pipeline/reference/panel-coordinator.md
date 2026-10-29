@@ -15,11 +15,17 @@ reviewer inputs, evidence, scope, severity and finding format these rules act on
 | Finding | In scope | Out of scope |
 |---|---|---|
 | CRITICAL | CRITICAL halt | CRITICAL halt |
-| HIGH / MEDIUM | Blocks merge | Never blocks. Coordinator dedupes and sends to Sean's queue with story and PR comment link; Sean decides whether to file it |
-| LOW / NIT | Coordinator's follow-up list (new code Sean may revisit or discard); never blocks | Dropped (old code is noise at this level) |
+| HIGH / MEDIUM | Blocks merge | Non-blocking; include in a required fix round, otherwise collect only after both reviewers APPROVE |
+| LOW / NIT | Non-blocking; include in a required fix round, otherwise collect only after both reviewers APPROVE | Dropped (old code is noise at this level) |
 
-- Rounds don't change outcomes: a HIGH/MEDIUM first raised in round 3 still blocks.
-- Round 2+: verify every prior blocking finding and review the fix changes.
+- **Fix round:** when the panel requires changes and a fix round is needed, give the fix seat every
+  unresolved, retained finding from both reviewers, including non-blocking items. Fix them together in
+  that round; do not send the non-blocking items to the EC as follow-ups while fixes are underway.
+- **Both APPROVE:** collect any remaining non-blocking items as follow-ups, deduped with the source
+  story and PR comment link. Hand them to the EC at story completion, or to Sean for a standalone
+  story. These items never trigger another fix or panel round. Sean decides whether to file them.
+- Rounds don't change outcomes: an in-scope HIGH/MEDIUM first raised in round 3 still blocks.
+- Round 2+: verify every prior retained finding and review the fix changes.
 - Max 3 rounds. Anything blocking after round 3 goes to Sean; no round 4.
 - A finding class that recurs in the same area: switch to a blunter fail-closed design instead of
   patching another case.
@@ -66,7 +72,9 @@ Panel round N (head <sha>):
 - [ ] Logs for this head exist, untrimmed, sha matches
 - [ ] Both reviewers launched fresh together (opus high + gpt-6.1-sol high/xhigh), with inputs above
 - [ ] Both verdicts posted, bound to this head; mutant results in
-- [ ] Each finding sorted: CRITICAL halt / blocks / Sean's queue / follow-up / dropped
+- [ ] Each finding sorted: CRITICAL halt / blocks / non-blocking / dropped
+- [ ] Fix round needed? Include all unresolved retained findings from both reviewers, including non-blocking items
+- [ ] Both APPROVE? Collect remaining non-blocking follow-ups; no new round for those items
 - [ ] Proportion applied; downgrades and fix rejections posted on the PR
 - [ ] Log folder deleted; reviewer terminals closed and their worktrees removed
 - [ ] Blocking findings open? -> fresh fix seat (rebase onto `origin/main`, full `hous ci` + new logs) -> round N+1 (max 3)

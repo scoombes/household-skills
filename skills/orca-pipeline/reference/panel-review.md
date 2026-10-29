@@ -14,8 +14,8 @@ halt, round checklist) is in [panel-coordinator.md](panel-coordinator.md); revie
 ## Inputs
 The coordinator gives each reviewer:
 - PR number, head sha, approved `plan.md`, and the log folder for that head.
-- Round 2+: every prior CRITICAL/HIGH/MEDIUM from BOTH reviewers, plus any coordinator PR replies that
-  rejected a fix.
+- Round 2+: every prior retained finding from BOTH reviewers, including non-blocking items assigned
+  to the fix round, plus any coordinator PR replies that rejected a fix.
 - This opening line: "Small household app; one developer maintains every test and safeguard forever.
   Find real problems in this change, rate them honestly, propose the smallest fix. The coordinator
   decides what is worth doing."
