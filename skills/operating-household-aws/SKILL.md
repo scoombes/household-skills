@@ -62,7 +62,7 @@ Run `hous help aws apply`. Probes like this, file reads, `cdk synth` and `hous c
   - The database write routes are five fixed families, all staging only. Each runs only as a `hous aws run` card (`run --card <plan.json>`, Sean's standalone card OK or its inclusion in the exact approved sitting summary, `run --apply`), never by hand. The hook denies their live and practice runs outside the verb; the read-only forms ([approval-mode.md](reference/approval-mode.md#what-is-in-place)) are not writes.
     1. `dsql-proof apply-step`: one numbered schema step, a practice run then its live run.
     2. `dsql-proof seed-catalogue`: the catalogue seed, a practice run then its live run.
-    3. `dsql-proof.reset-init`: deletes every household table and all its data; read [approval-mode.md](reference/approval-mode.md#database-refresh-cards) first.
+    3. `dsql-proof.reset-init`: deletes every household table and all its data; read [approval-mode.md](reference/approval-mode.md#database-refresh-cards) first. That section also holds the writer stop and restart rule: a refresh stops the staging API, live-update function and worker feed with `lambda` writes through `hous aws run` (listed by `--allowlist` only once installed), never another way.
     4. `dsql-proof.apply-init`: recreates the schema from the target chain's `0001_init`.
     5. `dsql-proof.verify-init`: the integrity verifier. It is a writer, not a read: it commits and removes synthetic probe rows.
 
