@@ -111,6 +111,9 @@ One Run, all Tasks created upfront with deps, one shared worktree unless files c
    claim against main. A real failure on main is fixed or escalated, never waved through.
 5. **PR panel.** Follow [reference/panel-coordinator.md](reference/panel-coordinator.md). Fresh Claude (`opus`,
    high) + fresh Codex (`gpt-6.1-sol`, high/xhigh) reviewer, every round; max 3 rounds.
+   A required fix round addresses all retained findings from both reviewers, including non-blocking
+   items. Collect remaining non-blocking review follow-ups only after both reviewers APPROVE; they
+   never trigger another round.
 6. **Untested paths.** A reviewer-flagged untested path blocks merge only while a check for it is queued
    or running; never merge past a running check, and answer "what's the holdup" with that check.
    Otherwise add it to the end-of-epic live-verification list. Live verification runs once per epic: a
@@ -234,7 +237,9 @@ open on purpose.
   `panel-*.md`, `verification.md`, `logs/<sha>/`, opened-screenshot folders. Every seat can reach it.
 - `~/household/epics/<TICKET>/`: `plan.md` and final reports.
 - Never in the root of `~/household`. Never commit throwaway probe UITests; keep copies next to the
-  reports. Durable follow-ups go into PR bodies and the follow-up list before the story ends.
+  reports. After both panel reviewers APPROVE, put remaining durable review follow-ups into PR bodies
+  and the follow-up list before the story ends. Return them to the EC, or to Sean for a standalone
+  story; do not start another round for them.
 
 ## iOS simulator host limit
 

@@ -110,7 +110,11 @@ reaches it (`consumer_fenced`); only replies to its own asks get through.
 Nobody in the pipeline files follow-up tickets on Sean's behalf: not the SC, not the EC.
 - **Track:** SCs return follow-ups to the EC. The EC keeps one running `## Follow-ups` list in
   `epic-log.md`: each item, the story/PR it came from, and why it matters. Challenge each list first:
-  a gap in the story's own scope gets fixed in that story, not listed.
+  an unmet story acceptance criterion gets fixed in that story, not listed.
+  For review findings, a required fix round addresses all retained items from both reviewers,
+  including non-blocking ones. SCs collect remaining non-blocking review follow-ups only after both
+  panel reviewers APPROVE; those items do not trigger another round. See
+  [panel coordinator rules](../orca-pipeline/reference/panel-coordinator.md) for finding triage.
 - **Present:** when the last story is completed, the EC merges like items and writes
   `~/household/epics/<EPIC>/follow-ups.md`, then gives Sean the list in plain words in its final
   report: each item, where it came from, a recommended importance, and a recommendation (one grouped
