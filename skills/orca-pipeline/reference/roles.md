@@ -53,8 +53,8 @@ it never hands back partial work as done.
 
 ## Planning always goes through a PC
 All planning (the epic plan, or a story's plan refresh after a drift-check, minor or major) is done
-by a PC, never by an EC or SC. The PC runs the plan author (`gpt-6-astra`, high) and a single plan reviewer
-(`opus`, high) until the reviewer approves.
+by a PC, never by an EC or SC. The PC runs the plan author `gpt-6-astra` (explicit effort, high unless the
+coordinator says otherwise) and a single plan reviewer (`opus`, high) until the reviewer approves.
 
 Questions: the PC collects every question raised by the author, the reviewer or itself into one
 grouped list and asks Sean directly, all at once, before finalizing. Answers go into the plan with
