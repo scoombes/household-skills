@@ -65,14 +65,16 @@ job; launch one. Seats never message Sean. Role differences and the drift proced
   with the real path filled in:
   > Repos with a pull-request workflow (household-api, -infra, -ios, -web). Before worker_done: `git fetch`
   > and rebase onto the tip of `origin/main`, push the draft PR through the App, then run
-  > `hous pr wait <n> --task <id> --ci-only --timeout 3600`. Exit 1 (red): fix, commit, push, wait again;
-  > every new head needs its own green run. Exit 0 (green): run
+  > `hous pr wait <n> --task <id> --ci-only --timeout 3600`. Exit 1 with a `failing job:` line (red):
+  > fix, commit, push, wait again; every new head needs its own green run. Exit 3 (timed out): wait again
+  > once; a second timeout: escalate with the pending or not-run checks it lists. Exit 1 without a
+  > `failing job:` line: escalate. Any other exit: escalate. Exit 0 (green): run
   > `hous pr logs <n> --task <id> --out ~/household/agent-work/<TICKET>/logs/<40-hex head sha>/` (one file per
   > job, each starting with `command:`, `commit:`, `exit code:` (the job's conclusion, `success` when green),
-  > `start:`/`end:`, the run and job URLs). Post one line per job on the PR: sha, job, conclusion, test count
-  > (read from the runner summary in that job's log; `n/a` where the job runs no test runner). Report the log
-  > folder path and the run URL in worker_done. Never run `hous ci` as the evidence here; it is a local parity
-  > check for debugging.
+  > `start:`/`end:`, the run and job URLs, `source:`). Post one line per job on the PR: sha, job, conclusion,
+  > test count (read from the runner summary in that job's log; `n/a` where the job runs no test runner).
+  > Report the log folder path and the run URL in worker_done. Never run `hous ci` as the evidence here; it is
+  > a local parity check for debugging.
 
   > Repos with no pull-request workflow (housetools, household-translations). Before worker_done, run a full
   > `hous ci` on your final commit (every fix round too; a new commit needs new logs). Only if
@@ -137,7 +139,8 @@ One Run, all Tasks created upfront with deps, one shared worktree unless files c
    passed at the head (`hous pr status` ci gate; housetools and household-translations: the full local
    `hous ci` logs for the head), and no more pushes are planned. Main moved after the approvals: a fresh
    seat rebases onto `origin/main`. With conflicts, it is a fix round (green GitHub CI at the new head,
-   `hous pr logs`, new panel round). Without conflicts the seat pushes and posts one PR comment whose first
+   `hous pr logs`; housetools and household-translations: full local `hous ci` logs for the new head;
+   new panel round). Without conflicts the seat pushes and posts one PR comment whose first
    line is exactly `Rebase carry-over @ <40-hex new head> from <40-hex approved head>`. After several
    rebases, still name the commit both seats approved, not the previous rebase's head: verdicts live only
    on the approved commit, so naming another head carries nothing and the PR waits for a new panel. No new

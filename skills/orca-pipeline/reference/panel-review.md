@@ -41,8 +41,8 @@ Reviewers do not dig through PR history for any of this.
 ## Evidence: logs
 1. Repos with a PR workflow: the implementer and fix seats save the GitHub CI run's logs for the head with
    `hous pr logs` into `~/household/agent-work/<TICKET>/logs/<40-hex sha>/`, one file per job, each starting
-   with `command:`, `commit:`, `exit code:` (the job's GitHub conclusion), `start:`/`end:` and the run and job
-   URLs. They post one line per job on the PR: sha, job, conclusion, test count.
+   with `command:`, `commit:`, `exit code:` (the job's GitHub conclusion), `start:`/`end:`, the run and job
+   URLs and `source:`. They post one line per job on the PR: sha, job, conclusion, test count.
 2. Repos with no PR workflow (housetools, household-translations): the implementer and fix seats run a full
    `hous ci` (every suite the repo documents only when it has no CI targets) on their final commit (every
    round) and save the complete raw logs, untrimmed, to
@@ -56,10 +56,12 @@ Reviewers do not dig through PR history for any of this.
    - Local `hous ci` log (`command: hous ci ...` or the suite command): `exit code:` must be `0`.
 
    3a. A job of the deciding run with no log file at all = CHANGES_NEEDED.
+
    3b. A header-only file with `exit code: skipped` and `source: none (job skipped)` is acceptable only for a
    job the workflow skips by design (a path filter or matrix condition), and only when the deciding run passes
    the CI gate, that is at least one job of the run concluded `success` (`hous pr status` shows the run as
-   passing; `checks.ts:179-182`). A run whose every job is skipped is a draft-era result and never evidence.
+   passing; the successful-run branch of `checks.ts`). A run whose every job is skipped is a draft-era result
+   and never evidence.
    No workflow changed by HOUS-685 has such a mixed set today (api `CI`, infra `checks`, ios `CI` have one job
    each; both `costs` matrix jobs run), so 3b describes future workflows, not a current case.
 
