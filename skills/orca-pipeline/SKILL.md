@@ -229,6 +229,8 @@ Assignment:
   dispatch, or `terminal send` to a mid-turn Claude.
 - Status to Sean at each stage transition: brief, verdict first, plain words (no internal codes), times
   in EDT.
+- Relay exactly one Sean step at a time; parallel seats' Sean asks queue; never re-ask Sean a fact he already
+  reported.
 
 ## Cleanup (gates, not reminders)
 
