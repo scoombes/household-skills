@@ -27,9 +27,12 @@ Reviewers do not dig through PR history for any of this.
 - Post exactly one verdict comment per round. First line exactly:
   `Panel review (<Claude|Codex> seat) @ <40-hex head sha>: APPROVE|CHANGES_NEEDED`
   (`hous pr merge` counts only verdicts bound to the current head).
-- Run up to 5 mutants per round, only via `hous sandbox --ephemeral -- <cmd>`, each against the single
-  test file that should catch it. Each mutant must differ from every mutation proof the implementer
-  listed; name the closest one. If `hous help sandbox` does not list `--ephemeral`, run no mutants.
+- Run up to 5 mutants per round. For iOS, use `hous test --ephemeral --mutants <folder>` (a disposable
+  host copy, not an isolated sandbox); for other supported repos, use `hous sandbox --ephemeral -- <cmd>`.
+  Target only the test file that should catch each mutant (for iOS, the patch's
+  `Tests: -only-testing:<…>` line). Each mutant must differ from every mutation proof the implementer
+  listed; name the closest one. If the applicable help (`hous help test` for iOS, `hous help sandbox`
+  otherwise) does not list `--ephemeral`, run no mutants.
 
 ## Reviewer may not
 - Write anything else: no commits, pushes, file edits, PR edits or labels.
