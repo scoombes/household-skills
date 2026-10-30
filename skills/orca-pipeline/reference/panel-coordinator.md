@@ -69,7 +69,8 @@ with hundreds of new tests is doing too much. Push back.
 Copy per round:
 ```
 Panel round N (head <sha>):
-- [ ] Logs for this head exist, untrimmed, sha matches
+- [ ] Logs for this head exist (`hous pr logs`, one per job; local `hous ci` only for housetools and
+  household-translations), untrimmed, commit matches
 - [ ] Both reviewers launched fresh together (opus high + gpt-6.1-sol high/xhigh), with inputs above
 - [ ] Both verdicts posted, bound to this head; mutant results in
 - [ ] Each finding sorted: CRITICAL halt / blocks / non-blocking / dropped
@@ -77,5 +78,6 @@ Panel round N (head <sha>):
 - [ ] Both APPROVE? Collect remaining non-blocking follow-ups; no new round for those items
 - [ ] Proportion applied; downgrades and fix rejections posted on the PR
 - [ ] Log folder deleted; reviewer terminals closed and their worktrees removed
-- [ ] Blocking findings open? -> fresh fix seat (rebase onto `origin/main`, full `hous ci` + new logs) -> round N+1 (max 3)
+- [ ] Blocking findings open? -> fresh fix seat (rebase onto `origin/main`, push, green GitHub CI at
+  the new head, `hous pr logs`; housetools/translations: full `hous ci` + new logs) -> round N+1 (max 3)
 ```
