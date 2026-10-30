@@ -112,10 +112,10 @@ One Run, all Tasks created upfront with deps, one shared worktree unless files c
 1. **Investigate** (Claude). Live repro with real evidence before discussing fixes. Open every screenshot;
    measure frames; characterize triggers. Output `investigation.md`: root cause (file:line), mechanism,
    constraints any fix must respect.
-2. **Plan.** Launch a PC (roles.md, Planning). It runs author `fable` (high) and single reviewer
-   `gpt-6.1-sol` (high) until approved, gets Sean's answers to all open questions first, and hands back
-   the final `plan.md`: TDD-ordered tasks, acceptance criteria, estimated count of new tests. The author
-   verifies the investigation's claims against the code. `fable` here is the one sanctioned frontier use.
+2. **Plan.** Launch a PC (roles.md, Planning). It runs author `gpt-6-astra` (explicit effort, high unless the
+   coordinator says otherwise) and a single reviewer Claude `opus` (high) until approved, gets Sean's answers
+   to all open questions first, and hands back the final `plan.md`: TDD-ordered tasks, acceptance criteria,
+   estimated count of new tests. The author verifies the investigation's claims against the code.
 3. **Implement** (Claude). Red regression test committed first, then the fix. Plan deviations only when
    empirically forced, documented with red-test evidence. `git fetch` and rebase onto the tip of
    `origin/main` (resolve conflicts, re-run the tests they touch), push the draft PR, wait for GitHub CI at the
@@ -159,7 +159,8 @@ get the full pipeline.
 
 - The two-seat panel is used ONLY for the PR merge gate. Every other review (plan, spot check, artifact)
   gets exactly one reviewer.
-- Always cross-vendor. Implementers are Claude, so single reviewers are Codex.
+- Always cross-vendor. Implementers are Claude, so single reviewers are Codex; plan authors are Codex, so the
+  plan reviewer is Claude.
 - Every round, review or fix, uses brand-new seats. Never reuse a terminal across rounds or roles.
 
 ## Seat models
@@ -171,7 +172,7 @@ State each seat's model+effort in the kickoff status.
 
 | Tier | Claude | Codex |
 |---|---|---|
-| Frontier (only plan author, or when Sean opts in) | `fable` (claude-fable-5-1) | `gpt-6-astra` |
+| Frontier (`gpt-6-astra` is the plan author; otherwise only when Sean opts in) | `fable` (claude-fable-5-1) | `gpt-6-astra` |
 | Heavy (automated ceiling) | `opus` (claude-opus-5-5) | `gpt-6.1-sol` high/xhigh |
 | Balanced | `sonnet` (claude-sonnet-5-5) | `gpt-6.1-sol` low/medium (fallback `gpt-5.6-terra`) |
 | Fast | `haiku` (claude-haiku-5-5; not launchable as a seat, see above) | `gpt-6-luna` |
