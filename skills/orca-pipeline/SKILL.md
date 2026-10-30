@@ -52,22 +52,35 @@ job; launch one. Seats never message Sean. Role differences and the drift proced
 - Do NOT send heartbeats. Message the coordinator only for ask, escalation or worker_done. Pass this down.
 - No `pkill`/`killall`/kill-by-pattern; stop only PIDs you started.
 - Use housetools (`hous --help`; guide `~/household/housetools/AGENTS.md`): `hous test|ci|up|down` for
-  checks, `hous pr status|wait|merge --task <id>` for merge gates (App token only), `hous worker
+  checks, `hous pr status|wait|merge|logs --task <id>` for merge gates (App token only), `hous worker
   start|status` for seats.
-- PRs open as DRAFT. No CI on drafts.
+- PRs open as DRAFT and stay draft until both reviewers APPROVE. GitHub CI runs on every push to the draft
+  (household-api, household-infra, household-ios, household-web). housetools and household-translations have
+  no pull-request workflow: their evidence stays the local `hous ci` (below).
 - Any seat that touches AWS, household-infra code, a gate package or DNS: load the `operating-household-aws`
   skill first; it owns every AWS rule.
 - Never `pgrep -f` a pattern your own wait loop contains. No plain `git fetch/pull/push/ls-remote/clone`: wrap
   every git network command and every `gh` call in `agent-token run`.
-- Implementer and fix seats: follow test-standard.md, and include this log requirement with the real
-  path filled in:
-  > Before worker_done, run a full `hous ci` on your final commit (every fix round too; a new commit needs
-  > new logs). It runs the repo's own GitHub workflows via act, so it matches GitHub CI; never substitute
-  > hand-picked suites. Only if `hous ci --list` shows no targets, run every suite the repo documents.
-  > Save each run's complete output, untrimmed, to
-  > `~/household/agent-work/<TICKET>/logs/<40-hex sha>/<suite>.log`. Start each log with these header lines:
-  > `command:`, `commit:`, `exit code:`, `start:`/`end:` (UTC). Post one line per suite on the PR: sha,
-  > test count, pass/fail, exit code. Report the log folder path in worker_done.
+- Implementer and fix seats: follow test-standard.md, and include the log requirement for the repo's kind,
+  with the real path filled in:
+  > Repos with a pull-request workflow (household-api, -infra, -ios, -web). Before worker_done: `git fetch`
+  > and rebase onto the tip of `origin/main`, push the draft PR through the App, then run
+  > `hous pr wait <n> --task <id> --ci-only --timeout 3600`. Exit 1 (red): fix, commit, push, wait again;
+  > every new head needs its own green run. Exit 0 (green): run
+  > `hous pr logs <n> --task <id> --out ~/household/agent-work/<TICKET>/logs/<40-hex head sha>/` (one file per
+  > job, each starting with `command:`, `commit:`, `exit code:` (the job's conclusion, `success` when green),
+  > `start:`/`end:`, the run and job URLs). Post one line per job on the PR: sha, job, conclusion, test count
+  > (read from the runner summary in that job's log; `n/a` where the job runs no test runner). Report the log
+  > folder path and the run URL in worker_done. Never run `hous ci` as the evidence here; it is a local parity
+  > check for debugging.
+
+  > Repos with no pull-request workflow (housetools, household-translations). Before worker_done, run a full
+  > `hous ci` on your final commit (every fix round too; a new commit needs new logs). Only if
+  > `hous ci --list` shows no targets, run every suite the repo documents. Save each run's complete output,
+  > untrimmed, to `~/household/agent-work/<TICKET>/logs/<40-hex sha>/<suite>.log`, starting with
+  > `command:`, `commit:`, `exit code:` (the command's exit code, `0` when green), `start:`/`end:` (UTC). Post
+  > one line per suite on the PR: sha, test count, pass/fail, exit code. Report the log folder path in
+  > worker_done.
 
   Include these two paragraphs verbatim:
   > Keep working until everything the task asks for is done, and only stop to ask when you can't go on
@@ -104,9 +117,11 @@ One Run, all Tasks created upfront with deps, one shared worktree unless files c
    the final `plan.md`: TDD-ordered tasks, acceptance criteria, estimated count of new tests. The author
    verifies the investigation's claims against the code. `fable` here is the one sanctioned frontier use.
 3. **Implement** (Claude). Red regression test committed first, then the fix. Plan deviations only when
-   empirically forced, documented with red-test evidence. Before the full `hous ci`: `git fetch` and rebase
-   onto the tip of `origin/main` (resolve any conflicts and re-run the tests they touch). Then run a full
-   `hous ci` on that commit, save logs, push, open a draft PR. Do not merge.
+   empirically forced, documented with red-test evidence. `git fetch` and rebase onto the tip of
+   `origin/main` (resolve conflicts, re-run the tests they touch), push the draft PR, wait for GitHub CI at the
+   head (`hous pr wait --ci-only`), fix on red, and on green save the run's logs (`hous pr logs`). Repos with no
+   PR workflow: a full `hous ci` on that commit, logs, then push and open the draft PR. Hand off only with green
+   CI at the head. Do not merge.
 4. **Baseline check** (separate seat). Independently verify every "pre-existing" or "unrelated" failure
    claim against main. A real failure on main is fixed or escalated, never waved through.
 5. **PR panel.** Follow [reference/panel-coordinator.md](reference/panel-coordinator.md). Fresh Claude (`opus`,
@@ -118,18 +133,20 @@ One Run, all Tasks created upfront with deps, one shared worktree unless files c
    or running; never merge past a running check, and answer "what's the holdup" with that check.
    Otherwise add it to the end-of-epic live-verification list. Live verification runs once per epic: a
    seat exercises each listed path on the final head and reports PASS/FAIL per path.
-7. **Merge** when: both APPROVE verdicts are bound to the head, the head contains current main, a full `hous ci`
-   passed on it, and no more pushes are planned. Main moved after the approvals: a fresh seat rebases onto
-   `origin/main`. With conflicts, it is a fix round (full `hous ci`, new panel round). Without conflicts the
-   seat pushes and posts one PR comment whose first line is exactly
-   `Rebase carry-over @ <40-hex new head> from <40-hex approved head>`. After several rebases, still name
-   the commit both seats approved, not the previous rebase's head: verdicts live only on the approved
-   commit, so naming another head carries nothing and the PR waits for a new panel. No new panel and no `hous ci`:
-   GitHub CI on the new head is the check. `hous pr merge` carries the approvals only if the change (files,
-   added and removed lines) is identical, and otherwise asks for a new panel round. Then mark the PR ready (CI runs now). If it needs
-   Sean's Code Owner approval, request it with `hous pr status <n> --task <id> --request-review` (App
-   token; never `gh` under Sean's login outside housetools). Merge with
-   `hous pr merge <n> --task <id> --delete-branch` once zero checks are pending.
+7. **Merge** when: both APPROVE verdicts are bound to the head, the head contains current main, GitHub CI
+   passed at the head (`hous pr status` ci gate; housetools and household-translations: the full local
+   `hous ci` logs for the head), and no more pushes are planned. Main moved after the approvals: a fresh
+   seat rebases onto `origin/main`. With conflicts, it is a fix round (green GitHub CI at the new head,
+   `hous pr logs`, new panel round). Without conflicts the seat pushes and posts one PR comment whose first
+   line is exactly `Rebase carry-over @ <40-hex new head> from <40-hex approved head>`. After several
+   rebases, still name the commit both seats approved, not the previous rebase's head: verdicts live only
+   on the approved commit, so naming another head carries nothing and the PR waits for a new panel. No new
+   panel and no `hous ci`: GitHub CI on the new head is the check. `hous pr merge` carries the approvals
+   only if the change (files, added and removed lines) is identical, and otherwise asks for a new panel
+   round. Then mark the PR ready (this starts no run; `hous pr merge` reuses the draft's green run at the
+   head). If it needs Sean's Code Owner approval, request it with
+   `hous pr status <n> --task <id> --request-review` (App token; never `gh` under Sean's login outside
+   housetools). Merge with `hous pr merge <n> --task <id> --delete-branch` once zero checks are pending.
    An infra PR's merge deploys nothing: the AWS change happens in a sitting from a run sheet, with Sean's OK on
    the card.
 
