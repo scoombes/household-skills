@@ -45,16 +45,16 @@ it never hands back partial work as done.
 | Investigator | `investigation.md`: root cause (file:line), mechanism, constraints any fix must respect, repro evidence. |
 | Plan author | `plan.md` as above, revised until the reviewer approves. |
 | Plan reviewer | One verdict per round: APPROVE or CHANGES_NEEDED, findings in the panel finding format. |
-| Implementer | Draft PR on a branch rebased onto the tip of `origin/main` before its `hous ci`; red-then-green commits; full `hous ci` logs for the final head; a report with mutation proofs and any declared deviations. |
-| Fix | Commits mapped to the findings they close (posted on the PR); the branch rebased onto the tip of `origin/main` before its `hous ci`; full `hous ci` logs for the new head. |
+| Implementer | Draft PR on a branch rebased onto the tip of `origin/main`; red-then-green commits; green GitHub CI at the head with its `hous pr logs` folder (housetools, household-translations: full `hous ci` logs for the final head); a report with mutation proofs and any declared deviations. |
+| Fix | Commits mapped to the findings they close (posted on the PR); the branch rebased onto the tip of `origin/main` and pushed; green GitHub CI at the new head with its `hous pr logs` folder (housetools, household-translations: full `hous ci` logs for the new head). |
 | Baseline check | Per claimed pre-existing failure: reproduced on main or not, with command and output. |
 | Panel reviewer | Exactly one verdict comment on the PR (panel-review.md). |
 | Verification | PASS/FAIL per listed path on the final head, with evidence. |
 
 ## Planning always goes through a PC
 All planning (the epic plan, or a story's plan refresh after a drift-check, minor or major) is done
-by a PC, never by an EC or SC. The PC runs the plan author (`fable`, high) and a single plan reviewer
-(`gpt-6.1-sol`, high) until the reviewer approves.
+by a PC, never by an EC or SC. The PC runs the plan author (`gpt-6-astra`, high) and a single plan reviewer
+(`opus`, high) until the reviewer approves.
 
 Questions: the PC collects every question raised by the author, the reviewer or itself into one
 grouped list and asks Sean directly, all at once, before finalizing. Answers go into the plan with

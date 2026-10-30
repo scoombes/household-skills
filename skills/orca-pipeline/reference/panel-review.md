@@ -39,15 +39,31 @@ Reviewers do not dig through PR history for any of this.
   acceptance criteria are neither findings nor escalations.
 
 ## Evidence: logs
-- Implementer and fix seats run a full `hous ci` (the repo's own workflows via act, so it matches GitHub
-  CI; every suite the repo documents only when it has no CI targets) on their final commit (every round)
-  and save the complete
-  raw logs, untrimmed, to `~/household/agent-work/<TICKET>/logs/<40-hex sha>/<suite>.log`, a fixed path
-  every seat can reach (seats' own scratchpads are private). Each log starts with the command, sha, exit
-  code and start/end time. They post one line per suite on the PR: sha, test count, pass/fail, exit code.
-- Reviewers treat the logs as proof. Log sha differs from the head, or the log lacks the runner's
-  summary = CHANGES_NEEDED. Do not run tests to fill the gap.
-- The PR summary lines are a record, never evidence.
+1. Repos with a PR workflow: the implementer and fix seats save the GitHub CI run's logs for the head with
+   `hous pr logs` into `~/household/agent-work/<TICKET>/logs/<40-hex sha>/`, one file per job, each starting
+   with `command:`, `commit:`, `exit code:` (the job's GitHub conclusion), `start:`/`end:` and the run and job
+   URLs. They post one line per job on the PR: sha, job, conclusion, test count.
+2. Repos with no PR workflow (housetools, household-translations): the implementer and fix seats run a full
+   `hous ci` (every suite the repo documents only when it has no CI targets) on their final commit (every
+   round) and save the complete raw logs, untrimmed, to
+   `~/household/agent-work/<TICKET>/logs/<40-hex sha>/<suite>.log`, a fixed path every seat can reach (seats'
+   own scratchpads are private). Each log starts with the command, sha, exit code (the command's exit code)
+   and start/end time. They post one line per suite on the PR: sha, test count, pass/fail, exit code.
+3. Reviewers treat the logs as proof. Common to both kinds: a log whose `commit:` differs from the head, or a
+   log without the runner's summary where the job or suite runs a test runner, = CHANGES_NEEDED. The success
+   rule differs by kind, because the header line means a different thing in each:
+   - GitHub job log (`command: GitHub Actions job ...`): `exit code:` must be the conclusion `success`.
+   - Local `hous ci` log (`command: hous ci ...` or the suite command): `exit code:` must be `0`.
+
+   3a. A job of the deciding run with no log file at all = CHANGES_NEEDED.
+   3b. A header-only file with `exit code: skipped` and `source: none (job skipped)` is acceptable only for a
+   job the workflow skips by design (a path filter or matrix condition), and only when the deciding run passes
+   the CI gate, that is at least one job of the run concluded `success` (`hous pr status` shows the run as
+   passing; `checks.ts:179-182`). A run whose every job is skipped is a draft-era result and never evidence.
+   No workflow changed by HOUS-685 has such a mixed set today (api `CI`, infra `checks`, ios `CI` have one job
+   each; both `costs` matrix jobs run), so 3b describes future workflows, not a current case.
+
+   Do not run tests to fill the gap. The PR summary lines are a record, never evidence.
 
 ## Scope
 - In scope: the changed lines and anything they break (callers, weakened tests). A bad pattern copied
