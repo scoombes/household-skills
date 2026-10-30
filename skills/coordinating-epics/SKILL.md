@@ -108,6 +108,10 @@ reaches it (`consumer_fenced`); only replies to its own asks get through.
 
 ## Follow-ups
 Nobody in the pipeline files follow-up tickets on Sean's behalf: not the SC, not the EC.
+
+A follow-up story produces no follow-ups. Every finding, including panel LOW/NIT findings, is fixed
+within that story's scope or dropped with a one-line reason in its `status.md`; do not add it to the
+end-of-epic follow-up list. The remaining rules below apply to stories that are not follow-up stories.
 - **Track:** SCs return follow-ups to the EC. The EC keeps one running `## Follow-ups` list in
   `epic-log.md`: each item, the story/PR it came from, and why it matters. Challenge each list first:
   an unmet story acceptance criterion gets fixed in that story, not listed.

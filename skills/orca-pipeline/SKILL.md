@@ -67,7 +67,7 @@ job; launch one. Seats never message Sean. Role differences and the drift proced
   > and rebase onto the tip of `origin/main`, push the draft PR through the App, then run
   > `hous pr wait <n> --task <id> --ci-only --timeout 3600`. Exit 1 with a `failing job:` line (red):
   > fix, commit, push, wait again; every new head needs its own green run. Exit 3 (timed out): wait again
-  > once; a second timeout: escalate with the pending or not-run checks it lists. Exit 1 without a
+  > once; a second timeout: escalate with the pending or not-run checks it lists (or its timeout detail). Exit 1 without a
   > `failing job:` line: escalate. Any other exit: escalate. Exit 0 (green): run
   > `hous pr logs <n> --task <id> --out ~/household/agent-work/<TICKET>/logs/<40-hex head sha>/` (one file per
   > job, each starting with `command:`, `commit:`, `exit code:` (the job's conclusion, `success` when green),
@@ -144,7 +144,10 @@ One Run, all Tasks created upfront with deps, one shared worktree unless files c
    line is exactly `Rebase carry-over @ <40-hex new head> from <40-hex approved head>`. After several
    rebases, still name the commit both seats approved, not the previous rebase's head: verdicts live only
    on the approved commit, so naming another head carries nothing and the PR waits for a new panel. No new
-   panel and no `hous ci`: GitHub CI on the new head is the check. `hous pr merge` carries the approvals
+   panel. For repos with a pull-request workflow, GitHub CI on the new head is the check; no `hous ci`
+   is needed. For housetools and household-translations (no pull-request workflow), run full local
+   `hous ci` on the new head, or every documented suite if there are no CI targets, and save the new
+   head's complete logs as above. `hous pr merge` carries the approvals
    only if the change (files, added and removed lines) is identical, and otherwise asks for a new panel
    round. Then mark the PR ready (this starts no run; `hous pr merge` reuses the draft's green run at the
    head). If it needs Sean's Code Owner approval, request it with
