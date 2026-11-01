@@ -59,6 +59,8 @@ job; launch one. Seats never message Sean. Role differences and the drift proced
   no pull-request workflow: their evidence stays the local `hous ci` (below).
 - Any seat that touches AWS, household-infra code, a gate package or DNS: load the `operating-household-aws`
   skill first; it owns every AWS rule.
+- Never print a private state file, even masked: read named fields only. Cookies live in a separate 0600
+  file from the ids other seats read.
 - Never `pgrep -f` a pattern your own wait loop contains. No plain `git fetch/pull/push/ls-remote/clone`: wrap
   every git network command and every `gh` call in `agent-token run`.
 - Implementer and fix seats: follow test-standard.md, and include the log requirement for the repo's kind,
@@ -228,6 +230,9 @@ Assignment:
 - Wait with `check --wait --types worker_done,escalation,question` via Bash `run_in_background` only. A
   `&`-detached waiter never notifies; two waiters conflict. A timeout is a checkpoint: run the cleanup
   sweep, re-arm, and peek `worker-read` or git state if unsure.
+- Re-arm the waiter in the same turn as every read of a wait result, also while holding an ask for Sean.
+  A timeout counts too: re-arm while any seat can still send (a held ask once left a seat's question
+  unanswered for hours).
 - `send --to dispatch:` mail is read only at the seat's next check. Put decision-critical input in a new
   dispatch, or `terminal send` to a mid-turn Claude.
 - Status to Sean at each stage transition: brief, verdict first, plain words (no internal codes), times
