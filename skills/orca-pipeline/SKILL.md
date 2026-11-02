@@ -10,9 +10,13 @@ This is the per-story pipeline. For an epic with 2+ stories, load `coordinating-
 Coordinator (EC), one Story Coordinator (SC) per story, each SC running this pipeline. Never run a
 multi-story epic from one coordinator.
 
+Coordinators: if Sean, your brief or your coordinator says night mode is on, load `night-mode`
+(`~/.agents/skills/night-mode/SKILL.md`). Every new SC or PC brief names the current on/off state; seats
+receive the rules their job needs in their brief.
+
 Terms: **coordinator** = EC, PC or SC; this pipeline is run by an SC. **Seat** = one agent launched for
-one job (investigator, plan author, plan reviewer, implementer, fix, baseline check, panel reviewer,
-verification). **Head** = the PR's current commit sha. **Work dir** = `~/household/agent-work/<TICKET>/`.
+one job (investigator, plan author, plan reviewer, implementer, fix, astra analysis, baseline check,
+panel reviewer, verification). **Head** = the PR's current commit sha. **Work dir** = `~/household/agent-work/<TICKET>/`.
 
 Reference files (read when the stage needs them; give seats the path):
 - [reference/roles.md](reference/roles.md): EC/PC/SC differences, what every role hands back,
@@ -46,6 +50,15 @@ and it burns the coordinator's context.
 Self-check before any tool call that writes outside your own files or runs a test: this is a seat's
 job; launch one. Seats never message Sean. Role differences and the drift procedure:
 [reference/roles.md](reference/roles.md).
+
+## Product, architecture and UX decisions
+
+Sean: "I dont always want the reccommended I want the best decsion for the product long term not the simplest becasue I know its common for agents to try and pick the easy route.. I would rather pay the cost penalty now and make the correct product decision, that includes archetecture decisions and UX decisions we should be sure we are always going with the best UX decision. Even if its not an option you can decide that its whats best."
+
+Choose the best long-term product, architecture and UX option. Challenge a recommended label; it is not a
+reason. You may choose an option that was not offered. When bringing options to Sean, recommend the best
+long-term choice and explain the trade-off. Proportion governs review churn: test requests, implausible
+edge cases and extra machinery. It is not a reason to leave a UX residual just because that is cheap.
 
 ## Every seat brief includes
 
@@ -118,7 +131,7 @@ One Run, all Tasks created upfront with deps, one shared worktree unless files c
    constraints any fix must respect.
 2. **Plan.** Launch a PC (roles.md, Planning). It runs author `gpt-6-astra` (explicit effort, high unless the
    coordinator says otherwise) and a single reviewer Claude `opus` (high) until approved, gets Sean's answers
-   to all open questions first, and hands back the final `plan.md`: TDD-ordered tasks, acceptance criteria,
+   to all open questions first (in `night-mode`, use the marked EC answers and routing in roles.md), and hands back the final `plan.md`: TDD-ordered tasks, acceptance criteria,
    estimated count of new tests. The author verifies the investigation's claims against the code.
 3. **Implement** (Claude). Red regression test committed first, then the fix. Plan deviations only when
    empirically forced, documented with red-test evidence. `git fetch` and rebase onto the tip of
@@ -129,14 +142,18 @@ One Run, all Tasks created upfront with deps, one shared worktree unless files c
 4. **Baseline check** (separate seat). Independently verify every "pre-existing" or "unrelated" failure
    claim against main. A real failure on main is fixed or escalated, never waved through.
 5. **PR panel.** Follow [reference/panel-coordinator.md](reference/panel-coordinator.md). Fresh Claude (`opus`,
-   high) + fresh Codex (`gpt-6.1-sol`, high/xhigh) reviewer, every round; max 3 rounds.
+   high) + fresh Codex (`gpt-6.1-sol`, high/xhigh) reviewer, every round; max 3 rounds per cycle; `night-mode` alone permits its one astra
+   analysis and second cycle, then parks the PR.
    A required fix round addresses all retained findings from both reviewers, including non-blocking
    items. Collect remaining non-blocking review follow-ups only after both reviewers APPROVE; they
    never trigger another round.
 6. **Untested paths.** A reviewer-flagged untested path blocks merge only while a check for it is queued
    or running; never merge past a running check, and answer "what's the holdup" with that check.
    Otherwise add it to the end-of-epic live-verification list. Live verification runs once per epic: a
-   seat exercises each listed path on the final head and reports PASS/FAIL per path.
+   seat exercises each listed path on the final head and reports PASS/FAIL per path. At night, run
+   permitted verification that needs neither live AWS nor Sean; put AWS and phone rows on the
+   final-sitting list in `coordinating-epics`. Queued or running checks still block merge. Deferred
+   verification stays visibly pending, never PASS.
 7. **Merge** when: both APPROVE verdicts are bound to the head, the head contains current main, GitHub CI
    passed at the head (`hous pr status` ci gate; housetools and household-translations: the full local
    `hous ci` logs for the head), and no more pushes are planned. Main moved after the approvals: a fresh
@@ -180,7 +197,7 @@ State each seat's model+effort in the kickoff status.
 
 | Tier | Claude | Codex |
 |---|---|---|
-| Frontier (`gpt-6-astra` is the plan author; otherwise only when Sean opts in) | `fable` (claude-fable-5-1) | `gpt-6-astra` |
+| Frontier (`gpt-6-astra` is the plan author; otherwise Sean's opt-in is required (`night-mode` opts in only for its astra analysis seat)) | `fable` (claude-fable-5-1) | `gpt-6-astra` |
 | Heavy (automated ceiling) | `opus` (claude-opus-5-5) | `gpt-6.1-sol` high/xhigh |
 | Balanced | `sonnet` (claude-sonnet-5-5) | `gpt-6.1-sol` low/medium (fallback `gpt-5.6-terra`) |
 | Fast | `haiku` (claude-haiku-5-5; not launchable as a seat, see above) | `gpt-6-luna` |
@@ -200,7 +217,8 @@ Assignment:
   mechanical; `sonnet` (`high`) for multi-file/integration/debugging or prose specs; `opus` for design judgment.
 - Single (non-panel) reviewers: at least balanced tier; scale to diff risk.
 - Stuck fix loop: next fix seat goes one tier up (and from `medium` to `high`). At the Claude ceiling
-  (`opus` high) use a fresh seat, never higher effort or frontier. Codex seats may raise effort.
+  (`opus` high) use a fresh seat, never higher effort or frontier. Codex seats may raise effort. The night-mode astra
+  seat analyses; a normal fix seat implements.
 - Prefer fewer turns over cheaper tokens: cheap models often take 2-3x the turns on multi-step work.
 - Codex: `gpt-6.1-sol` defaults to LOW effort, so always pass it. Efforts: low, medium, high, xhigh, max,
   ultra (luna tops at max). Never use hidden slugs (`gpt-reserve`, `codex-auto-review`). If the lineup
@@ -236,7 +254,8 @@ Assignment:
 - `send --to dispatch:` mail is read only at the seat's next check. Put decision-critical input in a new
   dispatch, or `terminal send` to a mid-turn Claude.
 - Status to Sean at each stage transition: brief, verdict first, plain words (no internal codes), times
-  in EDT.
+  in EDT. At night, routine notices also go in the wake-up report; only the waits named in `night-mode`
+  stop affected work.
 - Relay exactly one Sean step at a time; parallel seats' Sean asks queue; never re-ask Sean a fact he already
   reported.
 
@@ -258,7 +277,8 @@ open on purpose.
 - **Never close a working seat.** Read the screen first.
 - **Don't finish with open items.** An SC's `worker_done` includes its final sweep showing every ledger
   item closed or removed, except named worktrees kept for an open PR. The EC checks this before launching
-  the next SC, then removes the SC's own workspace.
+  the next SC, then removes the SC's own workspace, except a retained parked PR's. In `night-mode`, an SC
+  waiting only on Sean stays open with its ledger current instead of handing back a final sweep.
 - **Not on your ledger** (Sean's, or left by a dead coordinator): leave it, and mention it once in your
   next status to Sean.
 
