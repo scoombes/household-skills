@@ -36,7 +36,7 @@ A coordinator may:
 - Read code, logs, PRs and plans, only enough to brief seats and decide on their results.
 - Write its own files: briefs, ledger, `status.md`, handover, decision notes.
 - Post decision comments on PRs; mark PRs ready; merge with `hous pr merge` (SC only).
-- Message Sean directly.
+- Message Sean directly (plain text, per [roles.md](reference/roles.md)).
 
 A coordinator may not:
 - Edit, create or delete repo files; commit, push or rebase; edit PR content. Not even one character.
@@ -217,7 +217,7 @@ Assignment:
   mechanical; `sonnet` (`high`) for multi-file/integration/debugging or prose specs; `opus` for design judgment.
 - Single (non-panel) reviewers: at least balanced tier; scale to diff risk.
 - Stuck fix loop: next fix seat goes one tier up (and from `medium` to `high`). At the Claude ceiling
-  (`opus` high) use a fresh seat, never higher effort or frontier. Codex seats may raise effort. The night-mode astra
+  (`opus` high) use a fresh seat, never higher effort or frontier. Codex seats may raise effort. The `night-mode` astra
   seat analyses; a normal fix seat implements.
 - Prefer fewer turns over cheaper tokens: cheap models often take 2-3x the turns on multi-step work.
 - Codex: `gpt-6.1-sol` defaults to LOW effort, so always pass it. Efforts: low, medium, high, xhigh, max,

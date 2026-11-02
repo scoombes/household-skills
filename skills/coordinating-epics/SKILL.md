@@ -40,7 +40,7 @@ Epic <id>:
    without Sean, stopping only at a human gate, with the explicit `night-mode` outcomes when it is on (below).
 5. Run **one SC at a time** unless Sean says otherwise. Each SC gets its own workspace (SC
    placement). In `night-mode`, an SC waiting only on Sean (Code Owner approval, machine recovery, a
-   contained CRITICAL) stays open and does not count toward one SC at a time; the EC may launch the next
+   contained CRITICAL) stays open and does not count toward one SC at a time (the scheduling exception); the EC may launch the next
    independent ready story whose dependencies are merged. Keep the waiting SC and paused seats on the
    ledger; do not force settlement or final cleanup. Full stops, the stopped scope of a contained CRITICAL,
    and host-wide recovery pauses still stop launches in their scope. A new SC's brief names any stopped
@@ -130,13 +130,12 @@ reaches it (`consumer_fenced`); only replies to its own asks get through.
 - Send follow-ups to `run:<SC sub-run>`, or answer through its pending ask.
 - For anything urgent, also `orca terminal send` a one-line pointer into the SC's terminal.
 - Never assume a mailed decision was applied; ask the SC to confirm it.
-- On each night-mode on/off change, send to `run:<sub-run>` plus a one-line terminal pointer and require
+- On each `night-mode` on/off change, send to `run:<sub-run>` plus a one-line terminal pointer and require
   confirmation. The EC does this for its SCs and directly launched PCs; SCs do the same for their PCs and
   confirm propagation. If the sub-run is unknown, use a pending ask to obtain it and convey state. With no
   sub-run and no pending ask, the terminal pointer carries the state and requests the ID. Require
   confirmation either way; never assume delivery. A new coordinator's brief carries state before work
-  starts. This route is Sean's recorded decision but untested: keep the current version guide available
-  and record any actual delivery refusal, rather than assuming it succeeded.
+  starts. Record any actual delivery refusal.
 
 ## Final sitting
 SCs hand staging and phone rows to the EC with the action, dependencies, required proof and what needs
@@ -156,7 +155,7 @@ do not declare the epic verified or complete until they are settled.
 
 ## Follow-ups
 Nobody in the pipeline files follow-up tickets on Sean's behalf: not the SC, not the EC, except the EC's
-explicit night-mode HOUS-590 exception.
+explicit `night-mode` HOUS-590 exception.
 
 A follow-up story produces no follow-ups. Every finding, including panel LOW/NIT findings, is fixed
 within that story's scope or dropped with a one-line reason in its `status.md` (for a UX residual the reason

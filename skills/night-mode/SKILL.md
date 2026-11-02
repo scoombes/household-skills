@@ -9,7 +9,7 @@ Night mode is an overlay on `coordinating-epics` and `orca-pipeline`. Their role
 
 ## Turning it on and off
 
-Only Sean turns night mode on; the time never does. If his intent is unclear, it is off: ask in plain text. Sean: "Until you hear from me you remain in night mode no matter the time." When he says he is awake, turn it off and send the report. Record the state in epic-log.md and every new SC or PC brief. Tell running coordinators when it changes, using the routing and confirmation rules in `coordinating-epics`. SCs pass the state to their PCs. Seats never choose the state; their briefs carry the rules their job needs.
+Only Sean turns night mode on; the time never does. If his intent is unclear, it is off: ask in plain text. Sean: "Until you hear from me you remain in night mode no matter the time." When he says he is awake, turn it off and send the report. Record the state in epic-log.md and every new SC or PC brief. Tell running coordinators when it changes, using the routing and confirmation rules in `coordinating-epics`. SCs pass the state to their PCs. Seats never choose the state; their briefs carry the rules their job needs. Overlay states in flight when Sean says he is awake (a PR in its second cycle, a waiting SC beside another SC) continue until Sean directs.
 
 ## Who decides
 
@@ -47,7 +47,7 @@ Code Owner approval and machine recovery still wait for Sean. Only the affected 
 
 ## CRITICAL findings
 
-The top coordinator classifies from the finding's evidence. A broken core flow on main with no data or security harm is contained: only work depending on it or merging into that repo stops. A secret, a security hole, possible data loss or corruption, or anything uncertain is a full stop. Containment is never a downgrade; only Sean may downgrade CRITICAL. Follow [CRITICAL halt](../orca-pipeline/reference/panel-coordinator.md#critical-halt): stop at safe points and launch one fresh read-only Claude investigator in either branch. It reports cause, impact and fix options and does not fix.
+The top coordinator classifies from the finding's evidence; an SC under an EC sends it up at once and holds as CRITICAL halt says. A broken core flow on main with no data or security harm is contained: only work depending on it or merging into that repo stops. A secret, a security hole, possible data loss or corruption, or anything uncertain is a full stop. Containment is never a downgrade; only Sean may downgrade CRITICAL. Follow [CRITICAL halt](../orca-pipeline/reference/panel-coordinator.md#critical-halt): stop at safe points and launch one fresh read-only Claude investigator in either branch. It reports cause, impact and fix options and does not fix.
 
 Only the top coordinator sends the immediate push through `PushNotification`. If the push is unavailable, failed or not sent, tell Sean directly that push delivery is unavailable, log the failure, and keep the halt; never claim a push was sent. Re-notify at each `check --wait` timeout; during a full stop keep a timed waiter armed, even with no seat running, until Sean responds. Use the direct channel at those checkpoints if push remains unavailable. A contained finding gets one notification and an entry in the report; the affected work waits for Sean's direction in the morning, while unrelated work may continue under the scheduling exception in `coordinating-epics`. Send the investigation to Sean in either case.
 
@@ -58,7 +58,7 @@ Sean: "When I wake up I will tell you I am awake and I would like a report of al
 Keep it ready from epic-log.md and each story's current status.md; send it when Sean says he is awake. Use plain words; keep the HOUS-590 name when reporting its additions. There is no automatic wake time, timer or default answer.
 
 1. Overnight re-plans, first: direction, reason and approved updated plan.
-2. Every merged PR, merge commit and rounds by cycle; parked PRs and their blockers.
+2. Every merged PR, merge commit and rounds by cycle; in-flight PRs with head, cycle and round; parked PRs and their blockers.
 3. Decisions: options, choice and why, including marked EC plan answers, test-budget exceptions and HOUS-590 additions.
 4. Incidents, contained CRITICALs, rules broken, coordinator replacements, verification gaps and machine problems; PRs waiting for Code Owner approval, paused seats, and the final-sitting AWS/phone rows.
 

@@ -63,12 +63,15 @@ with hundreds of new tests is doing too much. Push back.
 
 ## CRITICAL halt
 With night mode off, these steps halt all work. In `night-mode`, the top coordinator classifies from the
-finding's evidence using its full-stop/contained rule; containment is not a downgrade.
+finding's evidence using its full-stop/contained rule; containment is not a downgrade. An SC under an EC
+sends the finding to the EC at once, stops its own merges, pushes and new seats until the EC classifies it,
+and launches the investigator; the EC relays the result to any other running coordinator. A lone SC is the
+top coordinator and classifies the finding itself.
 
 1. The reviewer escalates to its coordinator immediately with the five-part finding, then finishes and
    posts its verdict.
 2. Stop all work for a full stop, or only work depending on the broken flow or merging into its repo for a
-   contained night-mode halt: no new seats, merges or pushes in that scope, across every coordinator;
+   contained `night-mode` halt: no new seats, merges or pushes in that scope, across every coordinator;
    running seats stop at their next safe point (no half-written edits). Nothing is closed. An SC waiting
    only on Sean stays open under the scheduling exception in `coordinating-epics`.
 3. One exception, in both branches: launch a fresh read-only Claude investigator. It reports the cause (file:line,
@@ -79,10 +82,10 @@ finding's evidence using its full-stop/contained rule; containment is not a down
    failed or not sent, tell Sean directly that push delivery is unavailable, log it, and keep the halt; do
    not claim a push was sent. Re-notify at each `check --wait` timeout; during a full stop keep a timed
    waiter armed, even with no seat running, until Sean responds. Use the direct channel at those
-   checkpoints if push remains unavailable. For a contained night-mode finding, notify once and include it
+   checkpoints if push remains unavailable. For a contained `night-mode` finding, notify once and include it
    in the report.
 5. Stopped work resumes only when Sean sets direction. Unrelated work may continue only for a contained
-   night-mode finding. AWS work (secret rotation, deploys) stays Sean's. AWS rules still apply.
+   `night-mode` finding. AWS work (secret rotation, deploys) stays Sean's. AWS rules still apply.
 
 ## Round checklist (coordinator)
 Copy per round:
