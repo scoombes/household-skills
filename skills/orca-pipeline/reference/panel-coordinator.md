@@ -40,8 +40,7 @@ architecture and UX choices, follow the long-term rule in SKILL.md; do not drop 
 leaving it is cheap. Reviewers add real value and also drift toward perfection, the
 Codex seat especially: rounds of test changes to prove the implausible can't happen are waste. A story
 with hundreds of new tests is doing too much. Push back.
-- Test requests that don't name a plan-required rule are LOW; downgrade without debate. **Proposed
-  [P4]:** the exception is a request identifying a proof gap for a changed protected rule, in the format in
+- Test requests that don't name a plan-required rule are LOW; downgrade without debate. The exception is a request identifying a proof gap for a changed protected rule, in the format in
   panel-review.md (Finding format). Meeting the format alone is not blocking; a traced wrong result is a
   defect finding graded by consequence. A survivor that is equivalent, setup-failed, unreached or
   unrelated is diagnostic and creates no blocking test quota.
@@ -53,11 +52,10 @@ with hundreds of new tests is doing too much. Push back.
 - Test budget: past 1.5x the plan's estimate, stop, cut duplicate and non-plan tests, and exceed the
   budget only with Sean's OK. In `night-mode`, the EC may allow an overrun after those cuts, with a
   logged reason and report entry. The plan records its counts separately: lower-layer changed rules (with
-  their boundary rows), UI/live scenarios, and actual new tests and rows. Until Sean adopts the
-  replacement, the estimate is the new-test count and actual new tests and rows count against it. Under
-  **Proposed [P2]** the 1.5x applies separately to the UI/live scenarios and to the lower-layer rules, and
-  rows stay obligations of their rule. See [repo-testing.md](repo-testing.md) (Counts, time and authority).
-- Time: **Proposed [P1]**, the fix-seat allowance, 45-minute checkpoint and one bounded SC extension are in
+  their boundary rows), UI/live scenarios, and actual new tests and rows. The 1.5x applies separately to
+  the UI/live scenarios and to the lower-layer rules, and rows stay obligations of their rule; actual new
+  tests and rows are still reported. See [repo-testing.md](repo-testing.md) (Counts, time and authority).
+- Time: the fix-seat allowance, 45-minute checkpoint and one bounded SC extension are in
   [repo-testing.md](repo-testing.md). SC time authority does not extend to counts or correctness: a
   second overrun goes to Sean (the EC at night, with a logged reason).
 - Trend: track per reviewer the blocking findings raised vs downgraded/rejected for proportion. Past half
@@ -114,7 +112,7 @@ Panel round N (head <sha>):
 - [ ] Both APPROVE? Collect remaining non-blocking follow-ups; no new round for those items
 - [ ] Proportion applied; downgrades and fix rejections posted on the PR
 - [ ] Safe log folder kept, with its retention date recorded in `status.md` (repo-testing.md, Evidence
-  capture and retention, **Proposed [P3]**); delete only secret-bearing artifacts. Reviewer terminals
+  capture and retention); delete only secret-bearing artifacts. Reviewer terminals
   closed and their worktrees removed
 - [ ] Blocking findings open? -> fresh fix seat (rebase onto `origin/main`, push, green GitHub CI at
   the new head, `hous pr logs`; no-workflow repos: the full local gate + new logs; proof added only for a

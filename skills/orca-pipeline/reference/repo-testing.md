@@ -5,7 +5,7 @@ retention rules every seat shares. [test-standard.md](test-standard.md) says wha
 [panel-review.md](panel-review.md) and [panel-coordinator.md](panel-coordinator.md) say how it is reviewed.
 
 ## Contents
-- Status and proposed items
+- Policy version
 - Seven repos and three full-evidence lanes
 - Full evidence at the exact head
 - Historical targeted proof
@@ -13,23 +13,28 @@ retention rules every seat shares. [test-standard.md](test-standard.md) says wha
 - Evidence capture and retention
 - Adoption and transition
 
-## Status and proposed items
+## Policy version
 
-**DRAFT, HELD.** This guide is part of a draft policy PR that is not merged or synced. It stays held until
-Sean adopts its terms. Items marked **Proposed [P#]** here and in the other pipeline files are
-proposals, not decisions. Each takes effect only for work whose brief names an adoption version that
-includes it; until then the "Until adopted" rule applies. Sean's actual terms replace the markers
-(and this banner) in the same PR, re-reviewed before merge, so no partly adopted wording is installed.
+This guide and the matching rules in the other pipeline files are policy version **testing-guidance-v1**. The
+version applies to a story only where the story's brief names it under the adoption or transition recorded in
+[Adoption and transition](#adoption-and-transition). Work whose brief names an older pinned snapshot completes
+under that snapshot. Approving or merging this text is distinct from installing it: installation (`hous skills
+sync`) waits for the safe active-work boundary in that section, and nothing here contacts running work.
 
-| ID | Proposed item | Until adopted |
-|---|---|---|
-| P1 | Fix-seat time allowance: 10-minute ordinary local proof, 5-minute mutation aim and reviewer probe, 45-minute all-elapsed checkpoint, one bounded SC extension ([Counts, time and authority](#counts-time-and-authority)) | No fixed allowance. The brief names checks and an estimate; the 1.5× count rule is unchanged. |
-| P2 | Count replacement: the 1.5× rule applies separately to UI/live scenarios and to lower-layer changed rules | Actual new tests and rows count against the plan's estimated new-test count, as today. |
-| P3 | Evidence retention: SC-owned logs, 30/90-day minimums, closeout handoff of paths and dates ([Evidence capture and retention](#evidence-capture-and-retention)) | The old unconditional log deletion is not reinstated. Keep the safe folder until Sean directs cleanup. |
-| P4 | Test-request format, and the changed-protected-rule proof-gap exception | A test request that names no plan-required rule is LOW. |
-| P5 | Hostile input at an exposed auth, parser or identity boundary is graded by real consequence | A trigger that needs deliberate construction is LOW at most (except CRITICAL (a)). |
-| P6 | Review preparation may overlap the exact-head CI run; the final verdict waits for it | Reviewers start after the implementer or fix seat hands off with green full-gate logs. |
-| P7 | Historical targeted proof may be reused when its identity and invalidation checks hold ([Historical targeted proof](#historical-targeted-proof)) | Every claimed check is executed at the head. |
+What testing-guidance-v1 sets:
+- Fix-seat time: a 10-minute ordinary local proof allowance, a 5-minute mutation aim and reviewer probe, a
+  45-minute all-elapsed checkpoint and one bounded SC extension, then Sean (the EC at night)
+  ([Counts, time and authority](#counts-time-and-authority)).
+- Counts: the 1.5× rule and its authority apply separately to UI/live scenarios and to lower-layer changed
+  rules, and actual new tests and rows are still reported (same section).
+- Evidence: SC-owned logs, safe minimum retention of 30 and 90 days, an explicit closeout handoff and
+  Sean-directed cleanup ([Evidence capture and retention](#evidence-capture-and-retention)).
+- Review: the test-request format with the changed-protected-rule proof-gap exception, and severity by real
+  consequence for hostile input at an exposed boundary ([panel-review.md](panel-review.md), Severity and
+  Finding format).
+- Overlap: review preparation may run alongside the exact-head CI run; the final verdict waits for it
+  ([Full evidence at the exact head](#full-evidence-at-the-exact-head)).
+- Reuse: historical targeted proof, with exact invalidation ([Historical targeted proof](#historical-targeted-proof)).
 
 Pilots (one iOS layer pilot, one Stryker API pilot, one Muter feasibility check) are separate, separately
 authorized work. Nothing here installs or runs a tool, and no pilot is a prerequisite for the policy.
@@ -69,7 +74,7 @@ Sources, repo-relative: API `AGENTS.md`, `docs/testing.md`, `.github/workflows/c
   reviewers inspect them, and the SC checks them before merge. No tool enforcement is claimed.
 - Each required selector's executed outcome is recorded even when its class passes. A skipped, absent
   or setup-failed required selector is incomplete evidence, not a pass.
-- **Proposed [P6]:** review preparation (reading the diff, plan and prior findings) may overlap the CI run.
+- Review preparation (reading the diff, plan and prior findings) may overlap the CI run.
   No final verdict, and no merge, before successful current-head full logs and the mandatory proof.
 - Two head-bound approvals where applicable, and the existing `Rebase carry-over @ <new head> from
   <approved head>` protocol with a verified identical diff. A conflict or a changed diff needs renewed
@@ -80,7 +85,7 @@ Sources, repo-relative: API `AGENTS.md`, `docs/testing.md`, `.github/workflows/c
 
 ## Historical targeted proof
 
-**Proposed [P7].** Reusing an earlier targeted result is never a fresh-execution claim.
+Reusing an earlier targeted result is never a fresh-execution claim.
 - Record: original source commit and the actual source and test trees (including staged or unstaged
   patches and fixture changes), test identity, selectors, config, toolchain, dependencies, environment,
   locale/device profile, and the compatibility-set SHAs. Keep patch identities and safe provenance, not
@@ -98,16 +103,15 @@ lower-layer changed rules with their required boundary and parameter rows; UI/li
 new tests and rows; launches; expected runtime. Equivalent splitting changes organization, not covered
 behavior. Moving proof down frees upper-layer scope. HOUS-668's historic 16-case budget counted cases and
 parameter rows against an estimate of 12; that record is not rewritten.
-- **Proposed [P2]:** the 1.5× rule and its authority (Sean; EC at night after cuts) apply separately to the
-  plan's UI/live scenarios and to its lower-layer changed rules. Boundary and parameter rows are
-  obligations of their rule, not separate budget units. Actual new tests and rows are still reported.
-- Until adopted, actual new tests and rows count against the 1.5× ceiling, with no silent exemption.
+- The 1.5× rule and its authority (Sean; EC at night after cuts) apply separately to the plan's UI/live
+  scenarios and to its lower-layer changed rules. Boundary and parameter rows are obligations of their
+  rule, not separate budget units. Actual new tests and rows are still reported.
 - New or extended iOS journeys keep the 120-second ordinary timeout default. A higher allowance names the
   fidelity need and expected cost in the plan or brief before execution. Do not retime untouched
   journeys or change runner code. Mutation mode has its own timeout mechanics.
 
 **Time.** A **narrow fix** changes neither the approved design nor the plan; anything else takes the
-existing PC/drift route without resetting panel counts. **Proposed [P1]:**
+existing PC/drift route without resetting panel counts. Fix-seat time:
 
 | Event | Action and authority |
 |---|---|
@@ -128,7 +132,7 @@ lock and load protections and the host recovery authority; no parallel UI mutant
   failure lines, assertion identity and omission markers. If sanitation prevents verification, the
   evidence is incomplete. Secret-bearing artifacts stay out of PRs and reports and follow the existing
   strict deletion rules; no checksum or masked dump stands in for safe provenance.
-- **Proposed [P3]:** the SC owns `~/household/agent-work/<TICKET>/logs/<sha>/` through closeout, verifies
+- The SC owns `~/household/agent-work/<TICKET>/logs/<sha>/` through closeout, verifies
   safe evidence before closing a seat, and records each minimum-retention expiry in `status.md`.
   - Keep complete safe full-gate logs and the red/green/control provenance through review and at least
     **30 days after merge**. Unresolved release rows and pending or parked work keep their sanitized
@@ -142,19 +146,20 @@ lock and load protections and the host recovery authority; no parallel UI mutant
 
 ## Adoption and transition
 
-Coordinator-facing; the policy takes effect only through these steps. The rest of this section does not
-authorize contacting running work, installing or syncing.
-1. Sean adopts or amends the proposed items above and the cutover. Until then keep the old counting and
-   authority and the "Until adopted" column. Re-review the affected text before merge.
+Coordinator-facing. testing-guidance-v1 takes effect for a story only through these steps. The rest of this
+section does not itself authorize contacting running work, installing or syncing.
+1. Version. Merging this text approves it and installs nothing. A story is under testing-guidance-v1 only
+   when its brief names that version under the adoption or transition recorded here. A story whose brief
+   names an older pinned snapshot completes under that snapshot, never under whichever installed file
+   changed last. Adoption is of the whole version, not of single rules.
 2. Before any sync, inventory every active story, PR and coordinator: its current policy version, plan
    and brief proof additions, ongoing checks, review cycle and repo-local instructions. Get Sean's
    authority before notifying running work. One merged story cannot show that all others are unaffected.
-3. Declare an adoption version and a new-work boundary: briefs first issued after it use the new policy.
-   Each active story either completes under an explicitly pinned immutable old policy plus its brief (a
-   snapshot outside the installed directories, all referenced files present) or records a reviewed
-   transition at a safe stage boundary with the exact changed evidence obligations. New seats inherit
-   that choice, never whichever installed file changed last. No stopped check is assumed finished, and
-   panel counts are not reset.
+3. Declare the new-work boundary: briefs first issued after it name testing-guidance-v1. Each active story
+   either completes under an explicitly pinned immutable old policy plus its brief (a snapshot outside the
+   installed directories, all referenced files present) or records a reviewed transition at a safe stage
+   boundary with the exact changed evidence obligations. New seats inherit that choice, never whichever
+   installed file changed last. No stopped check is assumed finished, and panel counts are not reset.
 4. Repo-local instructions that conflict (for example iOS `AGENTS.md` and `docs/testing-ci-script.md`,
    the translations and web `CLAUDE.md` data-preservation waivers, web `CI.md`) are resolved explicitly
    in the adoption record with Sean's direction. After adoption this policy is the canonical general
@@ -163,10 +168,11 @@ authorize contacting running work, installing or syncing.
    silently override policy, or ignoring an explicit user instruction. A temporary override names the
    conflicting path, replacement, affected work and its expiry at the correction PR. With no explicit
    resolution the affected work waits; unrelated adoption proceeds under the declared boundary.
-5. Merge only on Sean's direction. Then update the clean `~/household/household-skills` checkout to
-   `origin/main`, run `hous skills sync` and inspect `hous skills status`. Never sync an unmerged
-   worktree or edit installed copies to force convergence. Record acknowledgements and the policy or pin
-   in new briefs; unknown delivery is not adoption. If a reliable transition is impossible, hold the sync.
+5. Sync is held until steps 2 to 4 are done for the active work and Sean authorizes it. Then update the
+   clean `~/household/household-skills` checkout to `origin/main`, run `hous skills sync` and inspect
+   `hous skills status`. Never sync an unmerged worktree or edit installed copies to force convergence.
+   Record acknowledgements and the policy version or pin in new briefs; unknown delivery is not adoption.
+   If a reliable transition is impossible, hold the sync.
 
-Relief starts at adoption: genuine red/green replaces equivalent mutants, selectors batch, and repeated
-UI proof needs a real uncovered risk.
+Relief starts for work under testing-guidance-v1: genuine red/green replaces equivalent mutants, selectors
+batch, and repeated UI proof needs a real uncovered risk.

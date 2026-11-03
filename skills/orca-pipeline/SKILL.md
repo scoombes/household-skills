@@ -27,7 +27,8 @@ Reference files (read when the stage needs them; give seats the path):
   CRITICAL halt, round checklist.
 - [reference/test-standard.md](reference/test-standard.md): what makes a test count.
 - [reference/repo-testing.md](reference/repo-testing.md): the seven repos' proof and full-evidence lanes,
-  counts, time, historical proof, evidence retention, and the adoption status of the proposed items.
+  counts, time, historical proof, evidence retention, and the policy version (testing-guidance-v1) with its
+  adoption and transition procedure.
 
 ## Coordinators never do the work
 
@@ -77,7 +78,8 @@ edge cases and extra machinery. It is not a reason to leave a UX residual just b
   fidelity and its cost, the evidence and its owner ([test-standard.md](reference/test-standard.md) item 1),
   the plan's separate counts of lower-layer changed rules and UI/live scenarios plus expected actual new
   tests, and the time authority ([repo-testing.md](reference/repo-testing.md), Counts, time and authority).
-  Each brief also names the adoption version in force (repo-testing.md, Adoption and transition). A
+  Each brief also names the testing policy version in force: testing-guidance-v1 or a pinned older snapshot
+  (repo-testing.md, Adoption and transition). A
   fix-round brief adds proof only for a changed risk or a demonstrated gap; another round is not a reason
   to rerun or add proof.
 - Any seat that touches AWS, household-infra code, a gate package or DNS: load the `operating-household-aws`
@@ -162,8 +164,8 @@ One Run, all Tasks created upfront with deps, one shared worktree unless files c
    A required fix round addresses all retained findings from both reviewers, including non-blocking
    items. Collect remaining non-blocking review follow-ups only after both reviewers APPROVE; they
    never trigger another round. Relabeling or replanning never creates a fourth day-mode round.
-   **Proposed [P6]:** review preparation may overlap the exact-head CI run, but no final verdict until the
-   current-head full evidence and mandatory proof exist (repo-testing.md).
+   Review preparation may overlap the exact-head CI run, but no final verdict until the current-head full
+   evidence and mandatory proof exist (repo-testing.md).
 6. **Untested paths.** Missing critical local proof blocks merge even when no check was scheduled:
    auth, tenant, privacy, identity, destructive-operation, wrong-database, rollback, data, draft and
    pending-write proof, and any unknown-outcome write. Retain the essential UI continuity proof where

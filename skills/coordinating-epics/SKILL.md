@@ -15,8 +15,8 @@ differences, what each role hands back, and the coordinator-drift procedure are 
 "Coordinators never do the work" in orca-pipeline.
 
 When Sean or the brief says night mode is on, load `night-mode`. Record on/off in epic-log.md and every
-new SC or PC brief. Every new SC or PC brief also names the testing-policy adoption version and any active
-transition ([repo-testing.md](../orca-pipeline/reference/repo-testing.md), Adoption and transition); testing
+new SC or PC brief. Every new SC or PC brief also names the testing policy version (testing-guidance-v1 or a
+pinned older snapshot) and any active transition ([repo-testing.md](../orca-pipeline/reference/repo-testing.md), Adoption and transition); testing
 budgets and time allowances live there and in orca-pipeline, not here.
 
 ## The EC loop
@@ -58,7 +58,7 @@ Epic <id>:
    sitting/verification rows keep the epic incomplete. Missing critical proof (orca-pipeline stage 6) is a
    release blocker: the epic stays incomplete and the blocker goes to Sean; noncritical local gaps stay on
    the verification list. The final report includes the evidence paths and open retention dates the SCs
-   handed back (**Proposed [P3]**).
+   handed back.
 
 Give Sean a verdict-first status at each story transition, naming each seat's model and effort. It
 informs; don't wait for a reply.
@@ -74,7 +74,7 @@ still require Sean.
   (`operating-household-aws` skill).
 - A blocking finding still open after 3 panel rounds, a disputed well-formed HIGH, a test budget
   overrun, or a second overrun of the fix-seat time checkpoint (panel-coordinator.md; the checkpoint is
-  **Proposed [P1]**, see repo-testing.md).
+  in repo-testing.md).
 - A plan question only Sean can answer (the PC asks him before finalizing): Sean's answer by day; a marked
   EC answer under `night-mode`.
 AWS and phone work is queued for the Final sitting; it does not block independent code/infra PRs whose

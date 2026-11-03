@@ -9,7 +9,7 @@ Proportion): this list makes each test count, it is not a reason to add more. Pe
 and evidence retention: [repo-testing.md](repo-testing.md).
 
 1. **Place each rule at the lowest faithful layer, with discriminating proof.**
-   - The plan holds one small table per changed rule or risk: consequence; the actual production
+   - The plan holds one small table covering the changed rules or risks, a row each: consequence; the actual production
      caller; the plausible wrong result; the cheapest faithful layer, selector and assertion; any UI/live
      fidelity added and why; expected cost; source, evidence and invalidation; pre-merge or release
      owner. The plan reviewer enforces the design. PR reviewers enforce its acceptance criteria,

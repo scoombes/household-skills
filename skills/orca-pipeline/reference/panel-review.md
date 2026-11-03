@@ -30,7 +30,7 @@ Reviewers do not dig through PR history for any of this.
   (`hous pr merge` counts only verdicts bound to the current head).
 - Run bounded novel probes, at most 5 mutants per round. The five is a ceiling, not a quota: a probe is
   for a plausible fault the logs and the implementer's proof do not already cover, never for repeating
-  covered proof. **Proposed [P1]:** aim at most 5 minutes per probe; a larger or expanding run goes to the
+  covered proof. Aim at most 5 minutes per probe; a larger or expanding run goes to the
   coordinator for a bounded decision. Prefer the lowest faithful layer. A UI/live mutant needs a named
   uncovered fault and the cheapest selector. For iOS, use `hous test --ephemeral --mutants <folder>` (a
   disposable host copy, not an isolated sandbox); for other supported repos, use
@@ -80,7 +80,7 @@ Reviewers do not dig through PR history for any of this.
    Do not run tests to fill the gap. The PR summary lines are a record, never evidence.
 
 4. Full-head evidence and historical targeted evidence are different. A full gate never carries from an old
-   head. **Proposed [P7]:** a reused targeted result counts only with the identity, intervening-change and
+   head. A reused targeted result counts only with the identity, intervening-change and
    invalidation record in [repo-testing.md](repo-testing.md) (Historical targeted proof), and is never
    treated as freshly executed; a relevant change or uncertainty means ask for a rerun. A required
    selector skipped, absent or failed in setup is incomplete evidence, not the intended red. Evidence
@@ -93,10 +93,9 @@ Reviewers do not dig through PR history for any of this.
 
 ## Severity
 Every finding except CRITICAL needs a realistic accidental trigger. A trigger that needs deliberate
-construction (adversarial input, contrived layout, crafted race) makes it LOW at most. **Proposed [P5]:**
-legitimate hostile input at an exposed auth, parser or identity boundary is graded by its real
-consequence, not LOW merely because it is deliberate; ordinary speculative or nonconsequential cases stay
-bounded.
+construction (adversarial input, contrived layout, crafted race) makes it LOW at most. Legitimate
+hostile input at an exposed auth, parser or identity boundary is graded by its real consequence, not LOW
+merely because it is deliberate; ordinary speculative or nonconsequential cases stay bounded.
 - **CRITICAL**: (a) out-of-scope code on main that breaks the app: security hole, data loss/corruption,
   or a broken core flow; deliberate-exploit paths count here. Or (b) any secret (key, token, password)
   anywhere in the PR's commits.
@@ -106,9 +105,9 @@ bounded.
   rollback); a plan-required rule with no test, or a test a relevant mutant survives. A survivor is
   diagnostic until it was activated, reached and relevant, and demonstrably exposes a gap in a
   plan-required or protected rule; equivalent, setup-failed or unrelated survivors create no blocking
-  test request. A request for more tests is MEDIUM only if it names such a plan-required rule (or, under
-  [P4] below, a proof gap in a changed protected rule). A traced wrong result is a defect finding graded
-  by its consequence under the rules above.
+  test request. A request for more tests is MEDIUM only if it names such a plan-required rule (or, under the
+  test request format below, a proof gap in a changed protected rule). A traced wrong result is a defect
+  finding graded by its consequence under the rules above.
 - **LOW**: deliberate-construction only, no current trigger, or a weak test for a rule the plan doesn't
   require.
 - **NIT**: naming, style, comments, structure.
@@ -117,7 +116,7 @@ bounded.
 - CRITICAL/HIGH/MEDIUM need all five parts: file:line; trigger; wrong result vs what the plan says; proof
   (log line, mutant result, or traced code path); smallest fix in 1-2 lines, not a redesign. A missing
   part makes it LOW.
-- **Test request format. Proposed [P4]:** name the consequential wrong behavior or the plan requirement,
+- **Test request format:** name the consequential wrong behavior or the plan requirement,
   the actual production path, the gap in existing proof and the cheapest faithful test. Meeting the format
   does not make a request blocking. A request with no plan-required rule stays LOW unless it identifies a
   proof gap for a changed protected rule (auth, tenant, privacy, identity, wrong-database,
