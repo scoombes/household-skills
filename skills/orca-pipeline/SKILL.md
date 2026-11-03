@@ -26,6 +26,9 @@ Reference files (read when the stage needs them; give seats the path):
 - [reference/panel-coordinator.md](reference/panel-coordinator.md): outcomes, proportion, disagreement,
   CRITICAL halt, round checklist.
 - [reference/test-standard.md](reference/test-standard.md): what makes a test count.
+- [reference/repo-testing.md](reference/repo-testing.md): the seven repos' proof and full-evidence lanes,
+  counts, time, historical proof, evidence retention, and the policy version (testing-guidance-v1) with its
+  adoption and transition procedure.
 
 ## Coordinators never do the work
 
@@ -68,15 +71,24 @@ edge cases and extra machinery. It is not a reason to leave a UX residual just b
   checks, `hous pr status|wait|merge|logs --task <id>` for merge gates (App token only), `hous worker
   start|status` for seats.
 - PRs open as DRAFT and stay draft until both reviewers APPROVE. GitHub CI runs on every push to the draft
-  (household-api, household-infra, household-ios, household-web). housetools and household-translations have
-  no pull-request workflow: their evidence stays the local `hous ci` (below).
+  (household-api, household-infra, household-ios, household-web). household-translations, household-site and
+  housetools have no pull-request workflow: their evidence is the local full gate for the head
+  ([repo-testing.md](reference/repo-testing.md); log requirement below).
+- A finite proof table: for each changed risk, the actual caller, the cheapest faithful layer, any UI/live
+  fidelity and its cost, the evidence and its owner ([test-standard.md](reference/test-standard.md) item 1),
+  the plan's separate counts of lower-layer changed rules and UI/live scenarios plus expected actual new
+  tests, and the time authority ([repo-testing.md](reference/repo-testing.md), Counts, time and authority).
+  Each brief also names the testing policy version in force: testing-guidance-v1 or a pinned older snapshot
+  (repo-testing.md, Adoption and transition). A
+  fix-round brief adds proof only for a changed risk or a demonstrated gap; another round is not a reason
+  to rerun or add proof.
 - Any seat that touches AWS, household-infra code, a gate package or DNS: load the `operating-household-aws`
   skill first; it owns every AWS rule.
 - Never print a private state file, even masked: read named fields only. Cookies live in a separate 0600
   file from the ids other seats read.
 - Never `pgrep -f` a pattern your own wait loop contains. No plain `git fetch/pull/push/ls-remote/clone`: wrap
   every git network command and every `gh` call in `agent-token run`.
-- Implementer and fix seats: follow test-standard.md, and include the log requirement for the repo's kind,
+- Implementer and fix seats: follow test-standard.md, and include the log requirement for the repo's lane,
   with the real path filled in:
   > Repos with a pull-request workflow (household-api, -infra, -ios, -web). Before worker_done: `git fetch`
   > and rebase onto the tip of `origin/main`, push the draft PR through the App, then run
@@ -89,15 +101,18 @@ edge cases and extra machinery. It is not a reason to leave a UX residual just b
   > `start:`/`end:`, the run and job URLs, `source:`). Post one line per job on the PR: sha, job, conclusion,
   > test count (read from the runner summary in that job's log; `n/a` where the job runs no test runner).
   > Report the log folder path and the run URL in worker_done. Never run `hous ci` as the evidence here; it is
-  > a local parity check for debugging.
+  > a local parity check for debugging. A gate log is for exactly that head: it never carries over from an old
+  > head, including across a rebase.
 
-  > Repos with no pull-request workflow (housetools, household-translations). Before worker_done, run a full
-  > `hous ci` on your final commit (every fix round too; a new commit needs new logs). Only if
-  > `hous ci --list` shows no targets, run every suite the repo documents. Save each run's complete output,
-  > untrimmed, to `~/household/agent-work/<TICKET>/logs/<40-hex sha>/<suite>.log`, starting with
-  > `command:`, `commit:`, `exit code:` (the command's exit code, `0` when green), `start:`/`end:` (UTC). Post
-  > one line per suite on the PR: sha, test count, pass/fail, exit code. Report the log folder path in
-  > worker_done.
+  > Repos with no pull-request workflow (household-translations, household-site, housetools). Before
+  > worker_done, run the repo's full local gate on your final commit (every fix round too; a new commit needs
+  > new logs): household-translations `hous ci --web <checkout> --ios <checkout>` (record both client SHAs),
+  > household-site `hous ci`, housetools the full host `hous test` plus the documented full specialized suites
+  > that apply (housetools has no `hous ci` capability). Save each run's complete output, untrimmed, to
+  > `~/household/agent-work/<TICKET>/logs/<40-hex sha>/<suite>.log`, starting with `command:`, `commit:`,
+  > `exit code:` (the command's exit code, `0` when green), `start:`/`end:` (UTC). Post one line per suite on
+  > the PR: sha, test count, pass/fail, exit code. Report the log folder path in worker_done. Never keep private
+  > state in a log; evidence that cannot be made safe is incomplete.
 
   Include these two paragraphs verbatim:
   > Keep working until everything the task asks for is done, and only stop to ask when you can't go on
@@ -116,7 +131,7 @@ Copy and track:
 ```
 Story <id>:
 - [ ] 1 Investigate -> investigation.md
-- [ ] 2 Plan -> plan.md (approved; includes new-test estimate)
+- [ ] 2 Plan -> plan.md (approved; includes the risk table, both counts and the new-test estimate)
 - [ ] 3 Implement -> draft PR + logs for head
 - [ ] 4 Baseline check (parallel with 3)
 - [ ] 5 PR panel -> two APPROVE verdicts on head
@@ -132,13 +147,15 @@ One Run, all Tasks created upfront with deps, one shared worktree unless files c
 2. **Plan.** Launch a PC (roles.md, Planning). It runs author `gpt-6-astra` (explicit effort, high unless the
    coordinator says otherwise) and a single reviewer Claude `opus` (high) until approved, gets Sean's answers
    to all open questions first (in `night-mode`, use the marked EC answers and routing in roles.md), and hands back the final `plan.md`: TDD-ordered tasks, acceptance criteria,
-   estimated count of new tests. The author verifies the investigation's claims against the code.
-3. **Implement** (Claude). Red regression test committed first, then the fix. Plan deviations only when
-   empirically forced, documented with red-test evidence. `git fetch` and rebase onto the tip of
+   the risk-to-layer table and counts ([test-standard.md](reference/test-standard.md) item 1,
+   [repo-testing.md](reference/repo-testing.md)), the estimated count of new tests. The author verifies the
+   investigation's claims against the code.
+3. **Implement** (Claude). For an actual defect, the red regression test is committed first, then the fix
+   (test-standard.md item 11). Plan deviations only when empirically forced, documented with evidence. `git fetch` and rebase onto the tip of
    `origin/main` (resolve conflicts, re-run the tests they touch), push the draft PR, wait for GitHub CI at the
    head (`hous pr wait --ci-only`), fix on red, and on green save the run's logs (`hous pr logs`). Repos with no
-   PR workflow: a full `hous ci` on that commit, logs, then push and open the draft PR. Hand off only with green
-   CI at the head. Do not merge.
+   PR workflow: the repo's full local gate on that commit (see the log requirement above), logs, then push and
+   open the draft PR. Hand off only with the green full gate for the head. Do not merge.
 4. **Baseline check** (separate seat). Independently verify every "pre-existing" or "unrelated" failure
    claim against main. A real failure on main is fixed or escalated, never waved through.
 5. **PR panel.** Follow [reference/panel-coordinator.md](reference/panel-coordinator.md). Fresh Claude (`opus`,
@@ -146,27 +163,33 @@ One Run, all Tasks created upfront with deps, one shared worktree unless files c
    analysis and second cycle, then parks the PR.
    A required fix round addresses all retained findings from both reviewers, including non-blocking
    items. Collect remaining non-blocking review follow-ups only after both reviewers APPROVE; they
-   never trigger another round.
-6. **Untested paths.** A reviewer-flagged untested path blocks merge only while a check for it is queued
-   or running; never merge past a running check, and answer "what's the holdup" with that check.
-   Otherwise add it to the end-of-epic live-verification list. Live verification runs once per epic: a
-   seat exercises each listed path on the final head and reports PASS/FAIL per path. At night, run
-   permitted verification that needs neither live AWS nor Sean; put AWS and phone rows on the
-   final-sitting list in `coordinating-epics`. Queued or running checks still block merge. Deferred
+   never trigger another round. Relabeling or replanning never creates a fourth day-mode round.
+   Review preparation may overlap the exact-head CI run, but no final verdict until the current-head full
+   evidence and mandatory proof exist (repo-testing.md).
+6. **Untested paths.** Missing critical local proof blocks merge even when no check was scheduled:
+   auth, tenant, privacy, identity, destructive-operation, wrong-database, rollback, data, draft and
+   pending-write proof, and any unknown-outcome write. Retain the essential UI continuity proof where
+   lower layers cannot establish it. Never merge past a queued or running check, and answer "what's the
+   holdup" with that check. A gap that only an environment or platform can close (device, staging, phone)
+   may be a release row with an owner, the reason, the exact version set and PASS/FAIL/PENDING status;
+   missing critical proof blocks the release, so the epic stays incomplete and the blocker goes to Sean.
+   Other noncritical local gaps go on the end-of-epic live-verification list. Live verification runs once
+   per epic, with one integrated sweep covering shared rows once: a seat exercises each listed path on the
+   final head and reports PASS/FAIL per path. At night, run permitted verification that needs neither live
+   AWS nor Sean; put AWS and phone rows on the final-sitting list in `coordinating-epics`. Deferred
    verification stays visibly pending, never PASS.
 7. **Merge** when: both APPROVE verdicts are bound to the head, the head contains current main, GitHub CI
-   passed at the head (`hous pr status` ci gate; housetools and household-translations: the full local
-   `hous ci` logs for the head), and no more pushes are planned. Main moved after the approvals: a fresh
+   passed at the head (`hous pr status` ci gate), or, for translations, site and housetools, the full
+   local-gate logs for the head ([repo-testing.md](reference/repo-testing.md); `hous pr status` may say "no
+   remote CI configured" and cannot check those logs, so the SC does), and no more pushes are planned. Main moved after the approvals: a fresh
    seat rebases onto `origin/main`. With conflicts, it is a fix round (green GitHub CI at the new head,
-   `hous pr logs`; housetools and household-translations: full local `hous ci` logs for the new head;
-   new panel round). Without conflicts the seat pushes and posts one PR comment whose first
+   `hous pr logs`; no-workflow repos: the full local-gate logs for the new head; new panel round). Without conflicts the seat pushes and posts one PR comment whose first
    line is exactly `Rebase carry-over @ <40-hex new head> from <40-hex approved head>`. After several
    rebases, still name the commit both seats approved, not the previous rebase's head: verdicts live only
    on the approved commit, so naming another head carries nothing and the PR waits for a new panel. No new
    panel. For repos with a pull-request workflow, GitHub CI on the new head is the check; no `hous ci`
-   is needed. For housetools and household-translations (no pull-request workflow), run full local
-   `hous ci` on the new head, or every documented suite if there are no CI targets, and save the new
-   head's complete logs as above. `hous pr merge` carries the approvals
+   is needed. For translations, site and housetools (no pull-request workflow), run the full local gate on
+   the new head and save the new head's complete logs as above. `hous pr merge` carries the approvals
    only if the change (files, added and removed lines) is identical, and otherwise asks for a new panel
    round. Then mark the PR ready (this starts no run; `hous pr merge` reuses the draft's green run at the
    head). If it needs Sean's Code Owner approval, request it with
@@ -176,9 +199,10 @@ One Run, all Tasks created upfront with deps, one shared worktree unless files c
    the card.
 
 Docs-only work (prose, guides, evidence) skips this pipeline: one medium-effort Codex reviewer checks
-accuracy against raw output, no tests, batched per milestone, agents merge after that approval (Code
-Owner paths still need Sean). Code, executable command blocks in runbooks/gate packages, and owned files
-get the full pipeline.
+accuracy against raw output and reviews consistency and resource links, with no tests and no staged
+red/green commits, batched per milestone; agents merge after that approval (Code Owner paths still need
+Sean). Code, executable command blocks in runbooks/gate packages, and owned files get the full pipeline.
+Translation JSON and site HTML are shipped data and behavior, not prose.
 
 ## Review rules
 
@@ -285,7 +309,10 @@ open on purpose.
 ## Artifacts
 
 - Work dir (`~/household/agent-work/<TICKET>/`): briefs, `ledger.md`, `status.md`, `investigation.md`,
-  `panel-*.md`, `verification.md`, `logs/<sha>/`, opened-screenshot folders. Every seat can reach it.
+  `panel-*.md`, `verification.md`, `logs/<sha>/`, opened-screenshot folders. Every seat can reach it. The
+  SC owns `logs/<sha>/` until closeout and keeps its safe evidence under the retention rule in
+  [repo-testing.md](reference/repo-testing.md) (Evidence capture and retention); it never deletes safe logs
+  on its own.
 - `~/household/epics/<TICKET>/`: `plan.md` and final reports.
 - Never in the root of `~/household`. Never commit throwaway probe UITests; keep copies next to the
   reports. After both panel reviewers APPROVE, put remaining durable review follow-ups into PR bodies

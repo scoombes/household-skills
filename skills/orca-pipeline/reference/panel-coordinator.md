@@ -29,6 +29,8 @@ reviewer inputs, evidence, scope, severity and finding format these rules act on
   prior retained findings and coordinator replies; its first round receives them too.
 - With night mode off, max 3 rounds: anything blocking after round 3 goes to Sean; no round 4.
   `night-mode` permits one astra analysis and one second cycle of up to 3 rounds, then parks the PR.
+  Replanning or relabeling never creates another round, and neither a time allowance nor an extension
+  grants one or waives correctness.
 - A finding class that recurs in the same area: switch to a blunter fail-closed design instead of
   patching another case.
 
@@ -38,15 +40,24 @@ architecture and UX choices, follow the long-term rule in SKILL.md; do not drop 
 leaving it is cheap. Reviewers add real value and also drift toward perfection, the
 Codex seat especially: rounds of test changes to prove the implausible can't happen are waste. A story
 with hundreds of new tests is doing too much. Push back.
-- Test requests that don't name a plan-required rule are LOW; downgrade without debate.
+- Test requests that don't name a plan-required rule are LOW; downgrade without debate. The exception is a request identifying a proof gap for a changed protected rule, in the format in
+  panel-review.md (Finding format). Meeting the format alone is not blocking; a traced wrong result is a
+  defect finding graded by consequence. A survivor that is equivalent, setup-failed, unreached or
+  unrelated is diagnostic and creates no blocking test quota.
 - If a fix would add new machinery (module, check layer, test framework) or more code than the change it
   fixes, you may reject it. Post a PR reply naming the smaller fix or accepting the residual risk.
   Next-round reviewers receive that reply and must answer it, not restate the finding. This does not
   override that UX rule or clear a well-formed HIGH that stays blocking under `night-mode`; choose
   another fix.
-- Test budget: past 1.5x the plan's estimated new-test count, stop, cut duplicate and non-plan tests, and
-  exceed the budget only with Sean's OK. In `night-mode`, the EC may allow an overrun after those cuts, with a
-  logged reason and report entry.
+- Test budget: past 1.5x the plan's estimate, stop, cut duplicate and non-plan tests, and exceed the
+  budget only with Sean's OK. In `night-mode`, the EC may allow an overrun after those cuts, with a
+  logged reason and report entry. The plan records its counts separately: lower-layer changed rules (with
+  their boundary rows), UI/live scenarios, and actual new tests and rows. The 1.5x applies separately to
+  the UI/live scenarios and to the lower-layer rules, and rows stay obligations of their rule; actual new
+  tests and rows are still reported. See [repo-testing.md](repo-testing.md) (Counts, time and authority).
+- Time: the fix-seat allowance, 45-minute checkpoint and one bounded SC extension are in
+  [repo-testing.md](repo-testing.md). SC time authority does not extend to counts or correctness: a
+  second overrun goes to Sean (the EC at night, with a logged reason).
 - Trend: track per reviewer the blocking findings raised vs downgraded/rejected for proportion. Past half
   in a story, apply these rules more strictly to that reviewer and tell Sean in your next status. Never
   lower its model or effort.
@@ -91,15 +102,19 @@ top coordinator and classifies the finding itself.
 Copy per round:
 ```
 Panel round N (head <sha>):
-- [ ] Logs for this head exist (`hous pr logs`, one per job; local `hous ci` only for housetools and
-  household-translations), untrimmed, commit matches
+- [ ] Full-gate logs for this head exist (`hous pr logs`, one per job; translations, site and housetools:
+  the local full-gate logs per repo-testing.md), untrimmed, commit matches; historical rows marked reused
+  or rerun
 - [ ] Both reviewers launched fresh together (opus high + gpt-6.1-sol high/xhigh), with inputs above
 - [ ] Both verdicts posted, bound to this head; mutant results in
 - [ ] Each finding sorted: CRITICAL halt / blocks / non-blocking / dropped
 - [ ] Fix round needed? Include all unresolved retained findings from both reviewers, including non-blocking items
 - [ ] Both APPROVE? Collect remaining non-blocking follow-ups; no new round for those items
 - [ ] Proportion applied; downgrades and fix rejections posted on the PR
-- [ ] Log folder deleted; reviewer terminals closed and their worktrees removed
+- [ ] Safe log folder kept, with its retention date recorded in `status.md` (repo-testing.md, Evidence
+  capture and retention); delete only secret-bearing artifacts. Reviewer terminals
+  closed and their worktrees removed
 - [ ] Blocking findings open? -> fresh fix seat (rebase onto `origin/main`, push, green GitHub CI at
-  the new head, `hous pr logs`; housetools/translations: full `hous ci` + new logs) -> next round within this cycle (max 3); at the limit follow Outcomes
+  the new head, `hous pr logs`; no-workflow repos: the full local gate + new logs; proof added only for a
+  changed risk or a demonstrated gap) -> next round within this cycle (max 3); at the limit follow Outcomes
 ```
