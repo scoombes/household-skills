@@ -15,7 +15,9 @@ differences, what each role hands back, and the coordinator-drift procedure are 
 "Coordinators never do the work" in orca-pipeline.
 
 When Sean or the brief says night mode is on, load `night-mode`. Record on/off in epic-log.md and every
-new SC or PC brief.
+new SC or PC brief. Every new SC or PC brief also names the testing-policy adoption version and any active
+transition ([repo-testing.md](../orca-pipeline/reference/repo-testing.md), Adoption and transition); testing
+budgets and time allowances live there and in orca-pipeline, not here.
 
 ## The EC loop
 
@@ -53,7 +55,10 @@ Epic <id>:
    it is not a done story.
 7. All stories merged: run the end-of-epic verification and the final sitting (Final sitting), then report
    to Sean with the follow-up list for him to decide on (Follow-ups). Unfinished stories and open
-   sitting/verification rows keep the epic incomplete.
+   sitting/verification rows keep the epic incomplete. Missing critical proof (orca-pipeline stage 6) is a
+   release blocker: the epic stays incomplete and the blocker goes to Sean; noncritical local gaps stay on
+   the verification list. The final report includes the evidence paths and open retention dates the SCs
+   handed back (**Proposed [P3]**).
 
 Give Sean a verdict-first status at each story transition, naming each seat's model and effort. It
 informs; don't wait for a reply.
@@ -67,8 +72,9 @@ still require Sean.
   `hous aws apply|run`). Packages READY before the switch (`hous help aws apply` succeeding) finish with `hous pkg run`,
   including the writes their Waivers section names; nothing new uses that path. Every other step only Sean can do
   (`operating-household-aws` skill).
-- A blocking finding still open after 3 panel rounds, a disputed well-formed HIGH, or a test budget
-  overrun (panel-coordinator.md).
+- A blocking finding still open after 3 panel rounds, a disputed well-formed HIGH, a test budget
+  overrun, or a second overrun of the fix-seat time checkpoint (panel-coordinator.md; the checkpoint is
+  **Proposed [P1]**, see repo-testing.md).
 - A plan question only Sean can answer (the PC asks him before finalizing): Sean's answer by day; a marked
   EC answer under `night-mode`.
 AWS and phone work is queued for the Final sitting; it does not block independent code/infra PRs whose
@@ -82,6 +88,9 @@ approval makes it final; Sean answers questions, he does not approve the plan.
 - Never defer a story's planning to its start, and never replace the epic plan with skeletons to
   plan later; that hides the epic's real shape from the plan review.
 - Staleness is handled by each SC's drift-check, against the existing plan.
+- The epic plan names the shared version and compatibility set (for example the translations, API and
+  client SHAs that stories must agree on) and the owner of each pending verification row. Each story's
+  slice carries its risk-to-layer table and counts (orca-pipeline stage 2).
 
 ## Story Coordinator
 1. Read the epic and its own story.
@@ -140,7 +149,8 @@ reaches it (`consumer_fenced`); only replies to its own asks get through.
 ## Final sitting
 SCs hand staging and phone rows to the EC with the action, dependencies, required proof and what needs
 Sean. Keep one final-sitting list alongside the separate end-of-epic verification list; cross-reference
-shared rows so they run once. After the code stories merge, the EC coordinates one sitting with Sean at the
+shared rows so they run once. Each row also carries its owner, reason, exact version set and
+PASS/FAIL/PENDING status. After the code stories merge, the EC coordinates one sitting with Sean at the
 keyboard through a dedicated SC. That SC launches seats to consolidate the run sheet, obtain its normal
 cross-vendor review and execute the approved work. The EC never writes the run sheet or runs commands
 itself. A lone-story SC coordinates its own final sitting through seats.
