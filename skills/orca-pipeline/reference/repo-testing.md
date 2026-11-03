@@ -9,6 +9,7 @@ retention rules every seat shares. [test-standard.md](test-standard.md) says wha
 - Seven repos and three full-evidence lanes
 - Full evidence at the exact head
 - Historical targeted proof
+- Mutation tools: selection and status
 - Counts, time and authority
 - Evidence capture and retention
 - Adoption and transition
@@ -37,7 +38,9 @@ What testing-guidance-v1 sets:
 - Reuse: historical targeted proof, with exact invalidation ([Historical targeted proof](#historical-targeted-proof)).
 
 Pilots (one iOS layer pilot, one Stryker API pilot, one Muter feasibility check) are separate, separately
-authorized work. Nothing here installs or runs a tool, and no pilot is a prerequisite for the policy.
+authorized work. Nothing here installs or runs a tool, and no pilot is a prerequisite for the policy. The
+mutation tools' current installation and integration status is in
+[Mutation tools: selection and status](#mutation-tools-selection-and-status).
 
 ## Seven repos and three full-evidence lanes
 
@@ -94,6 +97,45 @@ Reusing an earlier targeted result is never a fresh-execution claim.
   invalidates reuse. The same SHA alone is insufficient.
 - Mark each row **reused** or **rerun**. Reusing a baseline also needs proven reset and cleanup. Within-run
   selector baselines exist today; cross-run cache reuse is future tooling, not a current command.
+
+## Mutation tools: selection and status
+
+**Rule.** When mutation proof is already warranted ([test-standard.md](test-standard.md) item 1: a protected
+rule, or a plausible wrong implementation the targeted tests could pass) and a supported third-party tool is
+compatible with the repo's stack and the changed code, prefer that tool over building another ad hoc general
+mutation driver. Stryker covers API/Vitest; Muter covers iOS/Swift. This changes the choice of instrument,
+not the amount of proof:
+- No blanket mutation gate, score threshold, per-test or per-rule quota, routine UI/live mutation,
+  automatic install or upgrade, or broad run. Genuine red/green still replaces equivalent mutants; proof stays
+  at the lowest faithful layer, aimed at the changed code, inside the plan's existing counts and time
+  ([Counts, time and authority](#counts-time-and-authority)).
+- Hand-written, selector-targeted mutants through the supported `hous` commands (`hous test --mutants` for
+  iOS, `hous sandbox --ephemeral` elsewhere) stay valid. `hous` remains the normal test and evidence path.
+- A tool that is absent, unconfigured or incompatible on the host or the repo is a limitation to record, not
+  a waiver of required proof: use the existing red/green, semantic control or `hous` mutant instead. Absence
+  on any host never authorizes a network install or upgrade.
+- This adds no permission gate. Use follows the story's ordinary plan, brief and authorization.
+
+**Status (2026-11-03; re-check before relying).** Installed locally on Sean's Mac, not integrated anywhere.
+
+| Tool | For | Local CLI | Repo integration and compatibility |
+|---|---|---|---|
+| Stryker core and the official Vitest runner, both 10.1.1 | household-api (Vitest) | `~/.local/bin/stryker` | None. No HouseHold Stryker config or dependency exists and no mutation run has been made. |
+| Muter 16 | household-ios (Swift) | `~/.local/bin/muter` | None, and it is an **installed candidate pending feasibility** against modern HouseHold Swift. It was built from upstream source (tag 16, no prebuilt release) and only its version and help were checked. |
+
+- Roots: `~/.local/share/household-mutation-tools/stryker-10.1.1` (an isolated prefix with its own Vitest
+  4.1.11, which selects nothing for a HouseHold checkout) and
+  `~/.local/share/household-mutation-tools/muter-16`. Checks were limited to version and help, plus, for
+  Stryker, an import-only resolution of the Vitest plugin from the isolated prefix (no runner built, no
+  Vitest started). A global CLI does not give a project checkout plugin or dependency resolution.
+- This is a local Mac provision, not CI or any other host. Details and receipts:
+  `~/household/agent-work/TESTING-GUIDANCE/tools-install.md`.
+- No tested run command is recorded here. Before choosing a tool, read the repo's own `package.json` (or
+  Xcode project), its test config and its `AGENTS.md`; do not invent a config. Take the invocation from the
+  tool's own help and the repo's current setup, and keep the selection narrow: changed files, the tests that
+  should catch them, and the plan's isolation (database, workers, simulator lock, external calls). If that
+  cannot be done compatibly, fall back as above and say so in the evidence. Integration and the
+  compatibility pilots remain separately authorized work.
 
 ## Counts, time and authority
 

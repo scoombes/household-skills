@@ -27,8 +27,8 @@ Reference files (read when the stage needs them; give seats the path):
   CRITICAL halt, round checklist.
 - [reference/test-standard.md](reference/test-standard.md): what makes a test count.
 - [reference/repo-testing.md](reference/repo-testing.md): the seven repos' proof and full-evidence lanes,
-  counts, time, historical proof, evidence retention, and the policy version (testing-guidance-v1) with its
-  adoption and transition procedure.
+  counts, time, historical proof, mutation tool selection and installation status (Stryker, Muter), evidence
+  retention, and the policy version (testing-guidance-v1) with its adoption and transition procedure.
 
 ## Coordinators never do the work
 
