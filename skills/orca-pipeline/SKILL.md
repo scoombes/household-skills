@@ -255,6 +255,10 @@ Assignment:
   repo>`. It wraps `orca orchestration worker-start`, records the seat, verifies what was applied, and
   handles the Codex update prompt. `hous worker status --seats <path>` reconciles seats with Orca. Run
   `hous help worker start` for flags.
+- **Keep every seat open**, yours and any PC or SC you launch: right after each `hous worker start`, run
+  `orca orchestration worker-keep-open --dispatch <id>` (a raw `worker-start` takes `--keep-open`).
+  Orca closes finished workers on its own otherwise. After a power cut, seats with auto close on were
+  lost and every seat with it off survived (Sean, 2026-11-03).
 - It needs an existing worktree. To make one: `orca worktree create --name <n> --repo name:<repo>
   --base-branch main --no-parent`, then pass `--worktree path:<path>` (record it in the ledger).
 - Custom argv only when `hous worker start` can't express it:
@@ -292,7 +296,8 @@ open on purpose.
   it. The ledger is the only list you may clean.
 - **Settlement includes cleanup.** For each settled seat: `worker-release`; if it returns
   retained/user_takeover, read the screen, confirm idle, `terminal close`; confirm the terminal is gone;
-  then `check --ack <id>`. Not confirmed closed = not processed.
+  then `check --ack <id>`. Not confirmed closed = not processed. Kept-open seats don't close when they
+  finish, so this step is never skipped; `worker-release` also clears the keep-open.
 - **Sweep before every launch and at every wait timeout:** `terminal list --worktree <wt>` for each
   ledger worktree; close every idle ledger terminal with no running dispatch.
 - **Remove ledger worktrees when their job ends:** the PR worktree when its PR merges. Panel reviewers
