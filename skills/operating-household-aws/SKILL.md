@@ -9,13 +9,19 @@ description: Applies HouseHold's AWS operating rules (who may run reads and writ
 - **Sean**: the human owner. Only he signs in to AWS.
 - **Read**: an AWS call that only describes, gets, lists or looks up (`describe-*`, `get-*`, `list-*`, `lookup-*`,
   `sts get-caller-identity`, `accessanalyzer validate-policy|check-*`), plus `cdk diff`, `cdk synth` and
-  `cdk --unstable=diagnose diagnose`. One named exception: `hous aws inbox-ownership`, solely through its pinned infra client, is a
-  read under the sitting OK: it assumes Household-Staging-InboxOwnershipReader in staging, signs a non-admin DbConnect token, and
-  calls only household_inbox_checks.ownership_counts; it grants no setup, mapping, generic SQL, other AssumeRole or production route.
-  It returns counts only, and the sitting OK (`Approve staging <scope words>`) must explicitly name these staging ownership reads
-  (the label must contain the word `inbox-ownership` and `staging`; `inbox ownership` with a space is refused),
-  for example `Approve staging reads for this sitting, including hous aws inbox-ownership and its fixed count reads`.
-- **Write**: every other AWS call (a general `sts assume-role` is a write; the named read above is the only AssumeRole exception), including `route53 change-resource-record-sets`, `cdk deploy|bootstrap|destroy|rollback|import`
+  `cdk --unstable=diagnose diagnose`. Two scoped exceptions, each a read under the sitting OK:
+  - `hous aws inbox-ownership`, solely through its pinned infra client: it assumes Household-Staging-InboxOwnershipReader in staging, signs a non-admin DbConnect token, and
+    calls only household_inbox_checks.ownership_counts; it grants no setup, mapping, generic SQL, other AssumeRole or production route.
+    It returns counts only, and the sitting OK (`Approve staging <scope words>`) must explicitly name these staging ownership reads
+    (the label must contain the word `inbox-ownership` and `staging`; `inbox ownership` with a space is refused),
+    for example `Approve staging reads for this sitting, including hous aws inbox-ownership and its fixed count reads`.
+  - `hous aws household-entitlements inspect`, and the automatic preview inside a `dsql-proof.household-entitlements` card, solely through
+    the pinned infra entry: both assume the fixed staging **runtime role, which can write**. Read-only behavior rests on reviewed branches and tests that forbid dispatching an action,
+    not on the role. Each reads one named household's authority summary and the enforcing-household counts (total, and others than the named household), never a household list.
+    The sitting OK must name them: the label must contain the words `staging`, `household-entitlements` and `enforcing count` (case-insensitive, after the exact `Approve staging ` grammar), for example
+    `Approve staging reads and change-set plans for this sitting, including household-entitlements card-time previews, inspection and enforcing count through the fixed runtime role`.
+    Tell Sean the runtime role can write before the picker is shown. This grants no setup, mapping, generic SQL, other AssumeRole or production route.
+- **Write**: every other AWS call (a general `sts assume-role` is a write; the two named reads above are the only AssumeRole exceptions), including `route53 change-resource-record-sets`, `cdk deploy|bootstrap|destroy|rollback|import`
   and executing a change set.
   - Building a change set and uploading CDK assets are **plan steps**. They run only inside `hous aws plan`, under the sitting OK.
 - **Sitting OK**: Sean's explicit OK for a named scope (which stacks, which account), recorded verbatim in the work
@@ -59,19 +65,20 @@ description: Applies HouseHold's AWS operating rules (who may run reads and writ
 Run `hous help aws apply`. Probes like this, file reads, `cdk synth` and `hous ci` need no OK.
 - **It succeeds: approval mode. This is the normal path.**
   - Writes run only through `hous aws apply` / `hous aws run`, after Sean's standalone card OK or from `hous aws sitting apply` under the exact sealed sitting summary's write OK (the one exception is the packages READY before the switch, below). A hook in Claude Code and Codex denies any other AWS write, `cdk deploy`, `cdk destroy` and `cdk bootstrap`.
-  - The database write routes are five fixed families, all staging only. Each runs only as a `hous aws run` card (`run --card <plan.json>`, Sean's standalone card OK or its inclusion in the exact approved sitting summary, `run --apply`), never by hand. The hook denies their live and practice runs outside the verb; the read-only forms ([approval-mode.md](reference/approval-mode.md#what-is-in-place)) are not writes.
+  - The database write routes are six fixed families, all staging only. Each runs only as a `hous aws run` card (`run --card <plan.json>`, Sean's standalone card OK or its inclusion in the exact approved sitting summary, `run --apply`), never by hand. The hook denies their live and practice runs outside the verb; the read-only forms ([approval-mode.md](reference/approval-mode.md#what-is-in-place)) are not writes.
     1. `dsql-proof apply-step`: one numbered schema step, a practice run then its live run.
     2. `dsql-proof seed-catalogue`: the catalogue seed, a practice run then its live run.
     3. `dsql-proof.backfill-owners`: the ownership change's fixed data operation, a single-entry staging card like `verify-init`. It runs only between steps 0005 and 0006 of the ownership change; read [approval-mode.md](reference/approval-mode.md#schema-and-data-change-sittings) first.
     4. `dsql-proof.verify-init`: the integrity verifier. It is a writer, not a read: it commits and removes synthetic probe rows.
     5. `dsql-proof.allowlist-insert`: the fixed data operation that adds approved tester addresses to the staging sign-up allowlist (1-25 recipients from a private 0600 file). It only inserts addresses not yet listed and leaves existing rows as they are; it is not a general data-write permission. Read [approval-mode.md](reference/approval-mode.md#schema-and-data-change-sittings).
+    6. `dsql-proof.household-entitlements`: the fixed single-household entitlement operator (one action, `grant`, `activate` or `remove`, on one household, through the fixed runtime role). It is a standalone card only: never a sitting-summary child, and no all-households, production, practice or recovery form. Its preview runs automatically inside `run --card`, and the card carries the observed expectations. A stale or refused preflight did not enter the writer and wrote nothing to the database; after writer entry a stale, refused or uncertain result spends the card and is never retried. Read [approval-mode.md](reference/approval-mode.md#schema-and-data-change-sittings).
 
     Staging data is protected: no route resets, recreates, truncates, reseeds or drops a data-bearing table or column. `dsql-proof.reset-init` and `dsql-proof.apply-init` are retired for staging. The tooling refuses them on every path, old approved cards and summary children included. Never use them, even if an older installation still lists them.
-    Until AWS production go-live, a staging schema or data change stops the writers first and restarts them only after compatible code is deployed and checked: the stop and restart rule is in the same approval-mode section, run with `lambda` writes through `hous aws run` (listed by `--allowlist` only once installed), never another way.
-    Families 3, 4 and 5 exist only when the installed tooling exposes them: check `hous aws run --allowlist`. If an operation is not listed, it is not available; do not improvise another way (raw writer, `--dir`, generic SQL), and wait for the tooling update.
+    Until AWS production go-live, a staging schema or data change stops the writers first and restarts them only after compatible code is deployed and checked: the stop and restart rule is in the same approval-mode section, run with `lambda` writes through `hous aws run` (listed by `--allowlist` only once installed), never another way. The one exemption is `dsql-proof.household-entitlements`: a single-household application operation, not a schema or bulk-data change, so it needs no writer stop and may run after the writers restart.
+    Families 3 to 6 exist only when the installed tooling exposes them: check `hous aws run --allowlist`. If an operation is not listed, it is not available; do not improvise another way (raw writer, `--dir`, generic SQL), and wait for the tooling update.
     This adds no other database command, no production route and no recovery route: recovery SQL stays Sean's, in his database viewer.
   - Sean-only inbox setup: household-infra's inbox setup tool (`tools/inbox-ownership/src/setup-cli.ts`) is run by Sean alone, in his own terminal, after he has seen the full pinned command source and given its own separate exact OK. Agents run only its offline `--show-plan` and `--help`. It is not a card, an exemption or a route, and no agent executes the live setup.
-  - The one database read route: `hous aws inbox-ownership` (see Terms, Read) is a read under the current explicitly scoped sitting OK (`Approve staging <scope words>` naming these reads), never a card. The IAM role card and the reviewed database setup SQL (roles, schema, function, role mapping) remain writes with their own separate exact OKs; this exception covers neither, nor any generic SQL, other AssumeRole or production use.
+  - The two database read routes: `hous aws inbox-ownership` and `hous aws household-entitlements inspect` (see Terms, Read) are reads under the current explicitly scoped sitting OK (`Approve staging <scope words>` naming these reads), never a card. The IAM role card and the reviewed database setup SQL (roles, schema, function, role mapping) remain writes with their own separate exact OKs; these exceptions cover neither, nor any generic SQL, other AssumeRole or production use.
   - Follow [reference/approval-mode.md](reference/approval-mode.md) exactly.
   - New work gets a run sheet. A gate package, harness, fakes, mutants, receipts or `packages-index.md` is never written (rule 13).
 - **It fails (unknown command): Sean-runs mode, the fallback before the switch or if the tool is not updated.**
