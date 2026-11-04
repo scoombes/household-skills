@@ -67,9 +67,12 @@ edge cases and extra machinery. It is not a reason to leave a UX residual just b
 
 - Do NOT send heartbeats. Message the coordinator only for ask, escalation or worker_done. Pass this down.
 - No `pkill`/`killall`/kill-by-pattern; stop only PIDs you started.
-- Use housetools (`hous --help`; guide `~/household/housetools/AGENTS.md`): `hous test|ci|up|down` for
-  checks, `hous pr status|wait|merge|logs --task <id>` for merge gates (App token only), `hous worker
-  start|status` for seats.
+- Use housetools (`hous --help`; guide `~/household/housetools/AGENTS.md`): `hous test|up|down` for
+  local checks, `hous pr status|wait|merge|logs --task <id>` for merge gates (App token only), `hous worker
+  start|status` for seats. `hous ci` is not one rule for every repo: in a repo with a pull-request
+  workflow it is local debugging parity only (the evidence is GitHub CI on the head); household-translations
+  and household-site run it natively as their local gate; housetools refuses it, so its gate is `hous test`
+  ([repo-testing.md](reference/repo-testing.md)).
 - PRs open as DRAFT and stay draft until both reviewers APPROVE. GitHub CI runs on every push to the draft
   (household-api, household-infra, household-ios, household-web). household-translations, household-site and
   housetools have no pull-request workflow: their evidence is the local full gate for the head
@@ -216,7 +219,8 @@ Translation JSON and site HTML are shipped data and behavior, not prose.
 
 Every launch names model AND effort explicitly; defaults drift. Orca rejects any effort for `haiku`
 (1.4.224: "does not support effort"), so Claude seats use `sonnet` at `medium` instead. Confirm what applied
-(`hous worker status`, or `launch.effective` in the `worker-start` receipt) before relying on the seat.
+(`hous worker status`, or `launch.effective` under `result.worker.startOptions` in `orca orchestration
+worker-show --dispatch <id> --json --full`; Orca 1.4.246's default concise `--json` view omits it) before relying on the seat.
 State each seat's model+effort in the kickoff status.
 
 | Tier | Claude | Codex |
@@ -296,8 +300,11 @@ open on purpose.
   it. The ledger is the only list you may clean.
 - **Settlement includes cleanup.** For each settled seat: `worker-release`; if it returns
   retained/user_takeover, read the screen, confirm idle, `terminal close`; confirm the terminal is gone;
-  then `check --ack <id>`. Not confirmed closed = not processed. Kept-open seats don't close when they
-  finish, so this step is never skipped; `worker-release` also clears the keep-open.
+  then mark the seat settled in the ledger. Not confirmed closed = not processed. A plain `check` already
+  marks the mail it returns as handled (Orca 1.4.246), so handled mail says nothing about the seat: the
+  confirmed-closed terminal is the only proof. (`check --ack` is needed only against an older Orca that does
+  not mark; this machine runs 1.4.246, so it is not part of the routine.) Kept-open seats don't close when
+  they finish, so this step is never skipped; `worker-release` also clears the keep-open.
 - **Sweep before every launch and at every wait timeout:** `terminal list --worktree <wt>` for each
   ledger worktree; close every idle ledger terminal with no running dispatch.
 - **Remove ledger worktrees when their job ends:** the PR worktree when its PR merges. Panel reviewers
