@@ -70,8 +70,9 @@ edge cases and extra machinery. It is not a reason to leave a UX residual just b
 - Use housetools (`hous --help`; guide `~/household/housetools/AGENTS.md`): `hous test|up|down` for
   local checks, `hous pr status|wait|merge|logs --task <id>` for merge gates (App token only), `hous worker
   start|status` for seats. `hous ci` is not one rule for every repo: in a repo with a pull-request
-  workflow it is local debugging parity only (the evidence is GitHub CI on the head); household-translations
-  and household-site run it natively as their local gate; housetools refuses it, so its gate is `hous test`
+  workflow it is local debugging parity, not merge evidence (the evidence is GitHub CI on the head);
+  household-translations and household-site run it natively as their local gate; housetools refuses it, so
+  its gate is the full host `hous test` plus the documented specialized suites that apply
   ([repo-testing.md](reference/repo-testing.md)).
 - PRs open as DRAFT and stay draft until both reviewers APPROVE. GitHub CI runs on every push to the draft
   (household-api, household-infra, household-ios, household-web). household-translations, household-site and
@@ -302,8 +303,8 @@ open on purpose.
   retained/user_takeover, read the screen, confirm idle, `terminal close`; confirm the terminal is gone;
   then mark the seat settled in the ledger. Not confirmed closed = not processed. A plain `check` already
   marks the mail it returns as handled (Orca 1.4.246), so handled mail says nothing about the seat: the
-  confirmed-closed terminal is the only proof. (`check --ack` is needed only against an older Orca that does
-  not mark; this machine runs 1.4.246, so it is not part of the routine.) Kept-open seats don't close when
+  confirmed-closed terminal is the only proof. (`check --ack` is only for an older Orca that does not mark;
+  it is not part of the routine.) Kept-open seats don't close when
   they finish, so this step is never skipped; `worker-release` also clears the keep-open.
 - **Sweep before every launch and at every wait timeout:** `terminal list --worktree <wt>` for each
   ledger worktree; close every idle ledger terminal with no running dispatch.
