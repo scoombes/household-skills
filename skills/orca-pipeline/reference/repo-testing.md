@@ -37,7 +37,7 @@ What testing-guidance-v1 sets:
   ([Full evidence at the exact head](#full-evidence-at-the-exact-head)).
 - Reuse: historical targeted proof, with exact invalidation ([Historical targeted proof](#historical-targeted-proof)).
 
-Pilots (one iOS layer pilot, one Stryker API pilot, one Muter feasibility check) are separate, separately
+Pilots (one iOS layer pilot, one Stryker API pilot, one bounded MutantKit pilot) are separate, separately
 authorized work. Nothing here installs or runs a tool, and no pilot is a prerequisite for the policy. The
 mutation tools' current installation and integration status is in
 [Mutation tools: selection and status](#mutation-tools-selection-and-status).
@@ -103,7 +103,7 @@ Reusing an earlier targeted result is never a fresh-execution claim.
 **Rule.** When mutation proof is already warranted ([test-standard.md](test-standard.md) item 1: a protected
 rule, or a plausible wrong implementation the targeted tests could pass) and a supported third-party tool is
 compatible with the repo's stack and the changed code, prefer that tool over building another ad hoc general
-mutation driver. Stryker covers API/Vitest; Muter covers iOS/Swift. This changes the choice of instrument,
+mutation driver. Stryker covers API/Vitest; `hous mutantkit` covers iOS/Swift. This changes the choice of instrument,
 not the amount of proof:
 - No blanket mutation gate, score threshold, per-test or per-rule quota, routine UI/live mutation,
   automatic install or upgrade, or broad run. Genuine red/green still replaces equivalent mutants; proof stays
@@ -116,19 +116,18 @@ not the amount of proof:
   on any host never authorizes a network install or upgrade.
 - This adds no permission gate. Use follows the story's ordinary plan, brief and authorization.
 
-**Status (2026-11-03; re-check before relying).** Stryker is integrated in household-api; Muter is installed on Sean's Mac but not integrated.
+**Status (2026-11-04; re-check before relying).** Stryker is integrated in household-api. `hous mutantkit` (MutantKit 1.3.2, generator only) is integrated in housetools for household-ios stories; its bounded pilot is verified, which is not a general compatibility claim.
 
-| Tool | For | Local CLI | Repo integration and compatibility |
+| Tool | For | Local CLI | Integration |
 |---|---|---|---|
 | Stryker core and the official Vitest runner, both 10.1.1 | household-api (Vitest) | `~/.local/bin/stryker` | Integrated and piloted in household-api (merged; see below). The Mac-wide CLI is the original provision and is not what the repo uses. |
-| Muter 16 | household-ios (Swift) | `~/.local/bin/muter` | None, and it is an **installed candidate pending feasibility** against modern HouseHold Swift. It was built from upstream source (tag 16, no prebuilt release) and only its version and help were checked. |
+| MutantKit 1.3.2, generator only | household-ios (Swift) | `hous mutantkit` (pinned install under `~/.local/share/hous/mutantkit/1.3.2`; no PATH binary) | Integrated through housetools ([#94](https://github.com/scoombes/housetools/pull/94)); see the MutantKit section below. |
 
-- Roots: `~/.local/share/household-mutation-tools/stryker-10.1.1` (an isolated prefix with its own Vitest
-  4.1.11, which selects nothing for a HouseHold checkout) and
-  `~/.local/share/household-mutation-tools/muter-16`. Checks were limited to version and help, plus, for
-  Stryker, an import-only resolution of the Vitest plugin from the isolated prefix (no runner built, no
-  Vitest started). A global CLI does not give a project checkout plugin or dependency resolution.
-- This is a local Mac provision, not CI or any other host. These roots and the version/help-only checks are the
+- Root: `~/.local/share/household-mutation-tools/stryker-10.1.1` (an isolated prefix with its own Vitest
+  4.1.11, which selects nothing for a HouseHold checkout). Checks were limited to version and help plus an
+  import-only resolution of the Vitest plugin from the isolated prefix (no runner built, no Vitest started).
+  A global CLI does not give a project checkout plugin or dependency resolution.
+- This is a local Mac provision, not CI or any other host. This root and the version/help-only checks are the
   historical standalone provisioning facts; details and receipts:
   `~/household/agent-work/TESTING-GUIDANCE/tools-install.md`.
 - **household-api Stryker (merged 2026-11-03).** The repository pins its own exact `@stryker-mutator/core` and
@@ -149,8 +148,41 @@ not the amount of proof:
   Xcode project), its test config and its `AGENTS.md`; do not invent a config. Take the invocation from the
   tool's own help and the repo's current setup, and keep the selection narrow: changed files, the tests that
   should catch them, and the plan's isolation (database, workers, simulator lock, external calls). If that
-  cannot be done compatibly, fall back as above and say so in the evidence. Muter and any other repo or host
-  have no integration or compatibility pilot yet; that remains separately authorized work.
+  cannot be done compatibly, fall back as above and say so in the evidence.
+
+**MutantKit for household-ios (`hous mutantkit`).** When mutation proof is already warranted for a household-ios
+story, prefer the supported `hous mutantkit` commands (plan, select, run) over an ad hoc driver. Read
+`hous help mutantkit` and the maintained guide for the actual syntax and exit codes; do not invent a
+configuration. Guide: [housetools `tools/mutantkit/README.md`](https://github.com/scoombes/housetools/blob/29f26aa699df170a7fd2718651e18e03cb132ddb/tools/mutantkit/README.md)
+at the merge commit (housetools [#94](https://github.com/scoombes/housetools/pull/94)); the current guide in the
+housetools checkout is authoritative if it has moved on.
+- **What it is.** MutantKit 1.3.2 only proposes exact edits (a generator). The existing guarded ephemeral
+  lane, `hous test --ephemeral --mutants`, runs them and owns the machine lock, load limit, timeouts,
+  owned-process cleanup and outcome classes; do not restate or reimplement those. There is no native
+  MutantKit runner, automatic coverage selection, simulator pool, score threshold or blanket mutation gate, and
+  nothing runs it implicitly.
+- **Install.** `hous mutantkit status` shows the pin, host support and whether the pinned executable is
+  installed. If it is missing, `hous mutantkit provision --archive` installs it offline from a local copy of the
+  exact pinned archive. It never downloads or upgrades implicitly, so a missing install is never a reason for a
+  network fetch. macOS arm64 only.
+- **Inputs.** The story's source and tests are committed and the checkout is clean first. One plan covers ONE
+  production Swift file; a selection takes 1 to 5 explicit entry IDs, each with its entry digest and one named
+  unit-test method. Quote the plan and selection digests from the previous command's output as the caller. Any
+  new commit, test change, caller change or Xcode change makes the plan and selection stale, so regenerate
+  them. Each stage writes to a new output folder outside every Git checkout; never overwrite or reuse folders
+  that hold safe proof ([Evidence capture and retention](#evidence-capture-and-retention)).
+- **Before the run.** Read each generated patch and write down the assertion you expect to fail, then run.
+  After the run, compare the failing assertion with that prediction.
+- **Reading results.** A raw kill (any failing selected test) is not semantic proof; the result stays
+  unreviewed until you compare the failure with the prediction. Distinguish raw kills from compile failures,
+  setup failures, skips, timeouts and unknown results. An unknown or unreadable result format is
+  inconclusive, not a kill. `#Predicate` and other constructs MutantKit skips still need hand-written mutants
+  through the lane.
+- **Authority.** It uses the story's ordinary approved proof budget and authorization and adds no permission
+  gate, new proof category or quota.
+- **Status limit.** Integrated, with a bounded pilot verified. That is not a general compatibility claim: a
+  fresh download (and its quarantine behavior), a native runner, and broad or hostile-actor use are untested
+  and not claimed. Run-time limits and exit codes are in the guide.
 
 ## Counts, time and authority
 
