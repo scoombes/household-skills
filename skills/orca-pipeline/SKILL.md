@@ -270,7 +270,6 @@ Assignment:
     prompt (input during startup is silently dropped) -> `dispatch --inject` -> read back to confirm the
     task landed. On these seats `worker-release`/`worker-read` return `dispatch_not_found`; use
     `terminal close`/`terminal read`.
-    They have no dispatch, so `worker-keep-open` doesn't apply to them.
 
 ## Coordinator loop
 
