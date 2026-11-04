@@ -116,11 +116,11 @@ not the amount of proof:
   on any host never authorizes a network install or upgrade.
 - This adds no permission gate. Use follows the story's ordinary plan, brief and authorization.
 
-**Status (2026-11-03; re-check before relying).** Installed locally on Sean's Mac, not integrated anywhere.
+**Status (2026-11-03; re-check before relying).** Stryker is integrated in household-api; Muter is installed on Sean's Mac but not integrated.
 
 | Tool | For | Local CLI | Repo integration and compatibility |
 |---|---|---|---|
-| Stryker core and the official Vitest runner, both 10.1.1 | household-api (Vitest) | `~/.local/bin/stryker` | None. No HouseHold Stryker config or dependency exists and no mutation run has been made. |
+| Stryker core and the official Vitest runner, both 10.1.1 | household-api (Vitest) | `~/.local/bin/stryker` | Integrated and piloted in household-api (merged; see below). The Mac-wide CLI is the original provision and is not what the repo uses. |
 | Muter 16 | household-ios (Swift) | `~/.local/bin/muter` | None, and it is an **installed candidate pending feasibility** against modern HouseHold Swift. It was built from upstream source (tag 16, no prebuilt release) and only its version and help were checked. |
 
 - Roots: `~/.local/share/household-mutation-tools/stryker-10.1.1` (an isolated prefix with its own Vitest
@@ -128,14 +128,29 @@ not the amount of proof:
   `~/.local/share/household-mutation-tools/muter-16`. Checks were limited to version and help, plus, for
   Stryker, an import-only resolution of the Vitest plugin from the isolated prefix (no runner built, no
   Vitest started). A global CLI does not give a project checkout plugin or dependency resolution.
-- This is a local Mac provision, not CI or any other host. Details and receipts:
+- This is a local Mac provision, not CI or any other host. These roots and the version/help-only checks are the
+  historical standalone provisioning facts; details and receipts:
   `~/household/agent-work/TESTING-GUIDANCE/tools-install.md`.
-- No tested run command is recorded here. Before choosing a tool, read the repo's own `package.json` (or
+- **household-api Stryker (merged 2026-11-03).** The repository pins its own exact `@stryker-mutator/core` and
+  official `@stryker-mutator/vitest-runner` 10.1.1 (the global CLI is never used) and provides
+  `npm run test:mutation`, tested through `hous sandbox --ephemeral`. A run is serial, takes narrowly selected
+  sources and tests, makes one ordinary baseline and a real dry run, and exports its evidence. It is local-only:
+  no CI, score threshold or broad run. Pilots on a pure helper and on a database-backed caller were bounded:
+  the pure pilot had 9 semantic kills; the database pilot had 3 required semantic controls, and its other 7
+  raw `Killed` results were unmapped, so not all 10 count as meaningful proof. Raw `Killed` is not a proof by
+  itself. Run limits (bounded timers, Ctrl-C leaving an incomplete run) are in the guide. The recorded
+  manifests name Node 24.21.0 and Vitest 4.1.11, which is household-api's setup, not a general compatibility
+  claim. Guide:
+  [household-api `docs/testing-mutation.md`](https://github.com/scoombes/household-api/blob/d285c4e173954a995ea33b76ddccbd8c43953868/docs/testing-mutation.md);
+  PRs: [household-api #279](https://github.com/scoombes/household-api/pull/279) and
+  [housetools #93](https://github.com/scoombes/housetools/pull/93).
+- For Stryker in household-api, take the command from that package script, guide and `AGENTS.md`. For any other
+  tool or repo there is no tested run command here. Before choosing a tool, read the repo's own `package.json` (or
   Xcode project), its test config and its `AGENTS.md`; do not invent a config. Take the invocation from the
   tool's own help and the repo's current setup, and keep the selection narrow: changed files, the tests that
   should catch them, and the plan's isolation (database, workers, simulator lock, external calls). If that
-  cannot be done compatibly, fall back as above and say so in the evidence. Integration and the
-  compatibility pilots remain separately authorized work.
+  cannot be done compatibly, fall back as above and say so in the evidence. Muter and any other repo or host
+  have no integration or compatibility pilot yet; that remains separately authorized work.
 
 ## Counts, time and authority
 
