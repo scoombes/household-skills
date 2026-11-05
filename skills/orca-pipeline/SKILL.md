@@ -26,6 +26,8 @@ Reference files (read when the stage needs them; give seats the path):
 - [reference/panel-coordinator.md](reference/panel-coordinator.md): outcomes, proportion, disagreement,
   CRITICAL halt, round checklist.
 - [reference/test-standard.md](reference/test-standard.md): what makes a test count.
+- [reference/hous-commands.md](reference/hous-commands.md): the `hous` commands seats use instead of their own
+  helpers (test output, gate logs, mutant lists, exit 74 and 75); which parts are for coordinators only.
 - [reference/repo-testing.md](reference/repo-testing.md): the seven repos' proof and full-evidence lanes,
   counts, time, historical proof, mutation tool selection and status (Stryker for API, `hous mutantkit` for iOS), evidence
   retention, and the policy version (testing-guidance-v1) with its adoption and transition procedure.
@@ -74,6 +76,8 @@ edge cases and extra machinery. It is not a reason to leave a UX residual just b
   household-translations and household-site run it natively as their local gate; housetools refuses it, so
   its gate is the full host `hous test` plus the documented specialized suites that apply
   ([repo-testing.md](reference/repo-testing.md)).
+- Use the `hous` commands in `~/.agents/skills/orca-pipeline/reference/hous-commands.md` instead of writing
+  your own helper. Seats still end their turn after an ask; that file is not how a seat waits for a reply.
 - PRs open as DRAFT and stay draft until both reviewers APPROVE. GitHub CI runs on every push to the draft
   (household-api, household-infra, household-ios, household-web). household-translations, household-site and
   housetools have no pull-request workflow: their evidence is the local full gate for the head
@@ -112,11 +116,17 @@ edge cases and extra machinery. It is not a reason to leave a UX residual just b
   > worker_done, run the repo's full local gate on your final commit (every fix round too; a new commit needs
   > new logs): household-translations `hous ci --web <checkout> --ios <checkout>` (record both client SHAs),
   > household-site `hous ci`, housetools the full host `hous test` plus the documented full specialized suites
-  > that apply (housetools has no `hous ci` capability). Save each run's complete output, untrimmed, to
+  > that apply (housetools has no `hous ci` capability). Pass `--task <TICKET> --suite <suite>` to `hous test` and
+  > `hous ci`: each run's complete output, untrimmed, goes to
   > `~/household/agent-work/<TICKET>/logs/<40-hex sha>/<suite>.log`, starting with `command:`, `commit:`,
-  > `exit code:` (the command's exit code, `0` when green), `start:`/`end:` (UTC). Post one line per suite on
-  > the PR: sha, test count, pass/fail, exit code. Report the log folder path in worker_done. Never keep private
-  > state in a log; evidence that cannot be made safe is incomplete.
+  > `exit code:` (the command's exit code, `0` when green), `start:`/`end:` (UTC). It refuses to overwrite: a
+  > rerun at the same head takes a new `--suite`; keep both logs, and name the deciding log and the failed
+  > log's reason on the PR line. A failed log still needs that reason; a rerun is not a way to bury a real
+  > failure. A dirty worktree lands in `<sha>-dirty/`, which is not evidence for the head: commit first.
+  > housetools' `test:docker` and `selftest` have no log flag: save their output to that same path with that
+  > same header by hand. Post one line per suite on the PR: sha, test count, pass/fail, exit code. Report the
+  > log folder path in worker_done. Never keep private state in a log; evidence that cannot be made safe is
+  > incomplete.
 
   Include these two paragraphs verbatim:
   > Keep working until everything the task asks for is done, and only stop to ask when you can't go on
@@ -258,12 +268,13 @@ Assignment:
 - Default: `hous worker start --run <run> --task <task>|--spec <text> --worktree <selector> --agent
   <claude|codex> --model <id> --effort <level> --role <role> --name <name> --seats <abs path outside any
   repo>`. It wraps `orca orchestration worker-start`, records the seat, verifies what was applied, and
-  handles the Codex update prompt. `hous worker status --seats <path>` reconciles seats with Orca. Run
-  `hous help worker start` for flags.
-- **Keep every seat open**, yours and any PC or SC you launch: right after each `hous worker start`, run
-  `orca orchestration worker-keep-open --dispatch <id>` (a raw `worker-start` takes `--keep-open`).
-  Orca closes finished workers on its own otherwise. After a power cut, seats with auto close on were
-  lost and every seat with it off survived (Sean, 2026-11-03).
+  handles the Codex update prompt. `hous worker status --seats <path>` reconciles seats with Orca. Flags:
+  `~/household/housetools/docs/commands.md` (`hous help worker start` is a summary).
+- **Keep every seat open**, yours and any PC or SC you launch. `hous worker start` does this by default: it
+  reads Orca's own record of the seat and, if the seat is not kept, exits 1 with the exact command to run. Never
+  pass `--no-keep-open`. `hous worker status` shows it in the KEEP column (`kept`). A raw `worker-start` needs
+  `--keep-open`. Orca closes finished workers on its own otherwise. After a power cut, seats with auto close on
+  were lost and every seat with it off survived (Sean, 2026-11-03).
 - It needs an existing worktree. To make one: `orca worktree create --name <n> --repo name:<repo>
   --base-branch main --no-parent`, then pass `--worktree path:<path>` (record it in the ledger).
 - Custom argv only when `hous worker start` can't express it:
@@ -278,12 +289,31 @@ Assignment:
 
 ## Coordinator loop
 
-- Wait with `check --wait --types worker_done,escalation,question` via Bash `run_in_background` only. A
-  `&`-detached waiter never notifies; two waiters conflict. A timeout is a checkpoint: run the cleanup
-  sweep, re-arm, and peek `worker-read` or git state if unsure.
-- Re-arm the waiter in the same turn as every read of a wait result, also while holding an ask for Sean.
-  A timeout counts too: re-arm while any seat can still send (a held ask once left a seat's question
-  unanswered for hours).
+- Wait with `hous worker check --wait --timeout 600` (at most 3600) via Bash `run_in_background` only. A
+  `&`-detached waiter never notifies. Keep one waiter: waiters woken by the same arrival all get the same batch,
+  and you would act on it twice. `--seats <path>` names each sender by its seat.
+- Read all mail at each checkpoint, so give the waiter no `--types`. That flag decides what wakes a wait: with
+  `worker_done,escalation,question`, `status` mail sits unread until one of those arrives, and an EC's messages
+  were read late that way.
+- Run the waiter with nothing piped after it: a pipe hides the exit code and `head` can lose mail. Then read
+  its whole output file: the mail is already marked read, and small output lost to an early close is
+  undetectable. Go by the exit code in the notification:
+  - 0: messages. Act on them.
+  - 3: no mail. This is a timeout, not a failure, even though the notification says `failed`. It is a checkpoint:
+    run the cleanup sweep, re-arm, and check `hous worker status --seats <path>`, `worker-read` or git state if
+    unsure.
+  - 1: an error, never an empty wait (Orca refused, or the wait was cancelled or cut off). Read it. If it says mail
+    may have been marked read, run the command it prints to fetch the same batch.
+  - 74: the reader stalled or closed early on over about 64 KB. Run the command it prints, directly. If nothing
+    printed, `orca orchestration inbox --terminal run:<run_id> --limit <n> --full` still lists the mail.
+- A consuming check is yours alone. A script or another seat uses `hous worker check --peek`, which takes nothing.
+- Mail can't report a seat that died without sending any. `hous worker wait --seats <path> [--name <seat>]...
+  [--any] --timeout <s>`, also via `run_in_background`, reads seat state and never takes mail, so it can run beside
+  the waiter: exit 0 done (the seat's report is still mail), 1 failed or needs attention, 3 timeout. A seat's
+  question does not end it, so it never replaces the waiter.
+- Re-arm the mail waiter whenever it ends, in the same turn as you read its result, also while holding an ask
+  for Sean; a `hous worker wait` ending does not re-arm it. A timeout counts too: re-arm while any seat can
+  still send (a held ask once left a seat's question unanswered for hours).
 - `send --to dispatch:` mail is read only at the seat's next check. Put decision-critical input in a new
   dispatch, or `terminal send` to a mid-turn Claude.
 - Status to Sean at each stage transition: brief, verdict first, plain words (no internal codes), times
@@ -302,15 +332,18 @@ open on purpose.
 - **Settlement includes cleanup.** For each settled seat: `worker-release`; if it returns
   retained/user_takeover, read the screen, confirm idle, `terminal close`; confirm the terminal is gone;
   then mark the seat settled in the ledger. Not confirmed closed = not processed. A plain `check` already
-  marks the mail it returns as handled (Orca 1.4.246), so handled mail says nothing about the seat: the
-  confirmed-closed terminal is the only proof. (`check --ack` is only for an older Orca that does not mark;
-  it is not part of the routine.) Kept-open seats don't close when
+  marks the mail it returns as handled (Orca 1.4.246; `hous worker check` without `--peek` does too), so
+  handled mail says nothing about the seat: the confirmed-closed terminal is the only proof. (`check --ack` is
+  only for an older Orca that does not mark; it is not part of the routine.) Kept-open seats don't close when
   they finish, so this step is never skipped; `worker-release` also clears the keep-open.
 - **Sweep before every launch and at every wait timeout:** `terminal list --worktree <wt>` for each
   ledger worktree; close every idle ledger terminal with no running dispatch.
 - **Remove ledger worktrees when their job ends:** the PR worktree when its PR merges. Panel reviewers
-  are read-only and run in the PR worktree; they need no worktree of their own. Never remove one with uncommitted or unpushed changes; report
-  it instead.
+  are read-only and run in the PR worktree; they need no worktree of their own. Before removing one, run
+  `git status --ignored` in it and read the ignored list: a tracked-file diff can't see ignored files, and
+  that is how a merged PR's fixtures were lost (a `*.log` rule ignored them, so its gate passed only in that
+  worktree). Dependencies and build output are expected there. Never remove one with uncommitted or
+  unpushed changes, or an ignored file the work depends on; report it instead.
 - **Never close a working seat.** Read the screen first.
 - **Don't finish with open items.** An SC's `worker_done` includes its final sweep showing every ledger
   item closed or removed, except named worktrees kept for an open PR. The EC checks this before launching
