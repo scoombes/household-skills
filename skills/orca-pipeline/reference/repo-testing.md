@@ -109,8 +109,20 @@ not the amount of proof:
   automatic install or upgrade, or broad run. Genuine red/green still replaces equivalent mutants; proof stays
   at the lowest faithful layer, aimed at the changed code, inside the plan's existing counts and time
   ([Counts, time and authority](#counts-time-and-authority)).
-- Hand-written, selector-targeted mutants through the supported `hous` commands (`hous test --mutants` for
-  iOS, `hous sandbox --ephemeral` elsewhere) stay valid. `hous` remains the normal test and evidence path.
+- Hand-written, selector-targeted mutants through the supported `hous` commands stay valid, and `hous` remains
+  the normal test and evidence path. `hous help test` has the flags:
+  - household-api, -infra, -web, -translations, housetools: `hous test --ephemeral --mutants <list.json> [--out
+    <new folder>] [--only id,id] [--timeout <s>]` runs a list of exact-string edits on one disposable copy, with
+    the worktree untouched: a baseline of the targeted files, then a kill table. Start a list with `hous test
+    --propose-mutants <file[:from-to]|diff:<ref>>` and validate it with no run with `hous test --mutants
+    <list.json> --check`. An `add` entry with `expect: "pass"` and no edits is a real-shape probe. Exit 0 all as
+    expected, 1 a survivor, invalid mutant or result against expect, 3 inconclusive, 2 nothing started.
+  - household-ios has no sandbox, so a list does not run there. Its own lane reads a patch folder: `hous test
+    --ephemeral --mutants <folder>`. `hous test --mutants <list.json> --write-patches <new folder>` writes that
+    folder from a list.
+  - A one-off command a list can't express, such as per-mutant environment variables: `hous sandbox --ephemeral
+    -- <cmd>` on the same non-iOS repos.
+  - household-site has neither lane: use red/green or a semantic control.
 - A tool that is absent, unconfigured or incompatible on the host or the repo is a limitation to record, not
   a waiver of required proof: use the existing red/green, semantic control or `hous` mutant instead. Absence
   on any host never authorizes a network install or upgrade.
@@ -157,7 +169,7 @@ configuration. Guide: [housetools `tools/mutantkit/README.md`](https://github.co
 at the merge commit (housetools [#94](https://github.com/scoombes/housetools/pull/94)); the current guide in the
 housetools checkout is authoritative if it has moved on.
 - **What it is.** MutantKit 1.3.2 only proposes exact edits (a generator). The existing guarded ephemeral
-  lane, `hous test --ephemeral --mutants`, runs them and owns the machine lock, load limit, timeouts,
+  lane, `hous test --ephemeral --mutants <folder>`, runs them and owns the machine lock, load limit, timeouts,
   owned-process cleanup and outcome classes; do not restate or reimplement those. There is no native
   MutantKit runner, automatic coverage selection, simulator pool, score threshold or blanket mutation gate, and
   nothing runs it implicitly.
