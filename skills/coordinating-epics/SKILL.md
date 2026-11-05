@@ -198,7 +198,8 @@ cannot be "cheap to leave"); do not add it to the end-of-epic follow-up list. Th
 - **SC:** its own ledger (orca-pipeline, Cleanup).
 - **EC:** release each finished SC's and PC's seat (they can't release themselves after reporting
   done), remove the SC's workspace (`git status --ignored` first, as in orca-pipeline's Cleanup; then
-  `worktree rm`; release alone leaves it) except a retained parked PR's, and run a final sweep. An SC waiting only on Sean under `night-mode` is not finished: do not release it.
+  `worktree rm`; release alone leaves it) except a retained parked PR's, and run a final sweep. An SC
+  waiting only on Sean under `night-mode` is not finished: do not release it.
 
 ## Changing this skill
 

@@ -26,6 +26,8 @@ Reference files (read when the stage needs them; give seats the path):
 - [reference/panel-coordinator.md](reference/panel-coordinator.md): outcomes, proportion, disagreement,
   CRITICAL halt, round checklist.
 - [reference/test-standard.md](reference/test-standard.md): what makes a test count.
+- [reference/hous-commands.md](reference/hous-commands.md): the `hous` commands seats use instead of their own
+  helpers (test output, gate logs, mutant lists, exit 74 and 75); which parts are for coordinators only.
 - [reference/repo-testing.md](reference/repo-testing.md): the seven repos' proof and full-evidence lanes,
   counts, time, historical proof, mutation tool selection and status (Stryker for API, `hous mutantkit` for iOS), evidence
   retention, and the policy version (testing-guidance-v1) with its adoption and transition procedure.
@@ -74,26 +76,8 @@ edge cases and extra machinery. It is not a reason to leave a UX residual just b
   household-translations and household-site run it natively as their local gate; housetools refuses it, so
   its gate is the full host `hous test` plus the documented specialized suites that apply
   ([repo-testing.md](reference/repo-testing.md)).
-- Use these instead of writing your own helper. `hous help <command>` has the detail; for `hous worker`, `hous
-  pr` and `hous catalog` it is a summary, and the flags are in `~/household/housetools/docs/commands.md`:
-  - Waiting: `hous worker check` (your mail, nothing trimmed; exit 0 message, 3 none or timeout, 1 error, 74
-    reader stalled or closed early; without `--peek` it takes the mail, so read it directly, never through
-    `head`), `hous worker wait --seats <path>` (seat state, never mail), `hous pr wait` (bound to the pushed
-    head: `--head <sha>` or the checkout's HEAD).
-  - Test output: `hous test --summary [args]` and `hous test --failures <log>` (a saved log) show the failures
-    and the runner's summary only. `--summary` also works on `hous ci`.
-  - Gate logs: `--task <ticket> [--suite <name>]` or `--log <dir> [--suite <name>]` on `hous test` and `hous ci`
-    write the header and the complete output, and never overwrite.
-  - household-ios: `--retry-busy [--timeout <s>]` on `hous test` and `hous ci` (retries exit 75 only, bounded);
-    on `hous test`, `--classes A,B,C` (named UI classes one at a time, one log each) and `--export-attachments
-    <dir>` (named attachments under clean names).
-  - Mutant lists: `hous test --ephemeral --mutants <list.json>`, `--check`, `--propose-mutants`,
-    `--write-patches` ([repo-testing.md](reference/repo-testing.md), Mutation tools).
-  - Live API: `hous test-api up|status|down` (the seeded TEST API on :3100 on its own disposable database;
-    `status` proves who owns the port).
-  - String catalogs: `hous catalog compare|check|show`.
-  - Exit 74 from any of these: the output was not all read, so 74 is never a pass; the stderr message names the
-    command's own exit code. Exit 75 (household-ios): lock held or load over the limit, and nothing started.
+- Use the `hous` commands in `~/.agents/skills/orca-pipeline/reference/hous-commands.md` instead of writing
+  your own helper. Seats still end their turn after an ask; that file is not how a seat waits for a reply.
 - PRs open as DRAFT and stay draft until both reviewers APPROVE. GitHub CI runs on every push to the draft
   (household-api, household-infra, household-ios, household-web). household-translations, household-site and
   housetools have no pull-request workflow: their evidence is the local full gate for the head
@@ -135,11 +119,13 @@ edge cases and extra machinery. It is not a reason to leave a UX residual just b
   > that apply (housetools has no `hous ci` capability). Pass `--task <TICKET> --suite <suite>` to `hous test` and
   > `hous ci`: each run's complete output, untrimmed, goes to
   > `~/household/agent-work/<TICKET>/logs/<40-hex sha>/<suite>.log`, starting with `command:`, `commit:`,
-  > `exit code:` (the command's exit code, `0` when green), `start:`/`end:` (UTC). It refuses to overwrite, and a
-  > dirty worktree lands in `<sha>-dirty/`, which is not evidence for the head: commit first. housetools'
-  > `test:docker` and `selftest` have no log flag: save their output to that same path with that same header by
-  > hand. Post one line per suite on the PR: sha, test count, pass/fail, exit code. Report the log folder path
-  > in worker_done. Never keep private state in a log; evidence that cannot be made safe is incomplete.
+  > `exit code:` (the command's exit code, `0` when green), `start:`/`end:` (UTC). It refuses to overwrite: a
+  > rerun at the same head takes a new `--suite`; keep both logs and name the deciding one on the PR line. A
+  > failed log still needs a reason; a rerun is not a way to bury a real failure. A dirty worktree lands in
+  > `<sha>-dirty/`, which is not evidence for the head: commit first. housetools' `test:docker` and `selftest`
+  > have no log flag: save their output to that same path with that same header by hand. Post one line per
+  > suite on the PR: sha, test count, pass/fail, exit code. Report the log folder path in worker_done. Never
+  > keep private state in a log; evidence that cannot be made safe is incomplete.
 
   Include these two paragraphs verbatim:
   > Keep working until everything the task asks for is done, and only stop to ask when you can't go on
@@ -308,9 +294,9 @@ Assignment:
 - Read all mail at each checkpoint, so give the waiter no `--types`. That flag decides what wakes a wait: with
   `worker_done,escalation,question`, `status` mail sits unread until one of those arrives, and an EC's messages
   were read late that way.
-- When the waiter ends, read its whole output file directly, never through `head` or another reader that may
-  close early: the mail is already marked read, and small output lost to an early close is undetectable. Then
-  go by the exit code in the notification:
+- Run the waiter with nothing piped after it: a pipe hides the exit code and `head` can lose mail. Then read
+  its whole output file: the mail is already marked read, and small output lost to an early close is
+  undetectable. Go by the exit code in the notification:
   - 0: messages. Act on them.
   - 3: no mail. This is a timeout, not a failure, even though the notification says `failed`. It is a checkpoint:
     run the cleanup sweep, re-arm, and check `hous worker status --seats <path>`, `worker-read` or git state if
@@ -324,9 +310,9 @@ Assignment:
   [--any] --timeout <s>`, also via `run_in_background`, reads seat state and never takes mail, so it can run beside
   the waiter: exit 0 done (the seat's report is still mail), 1 failed or needs attention, 3 timeout. A seat's
   question does not end it, so it never replaces the waiter.
-- Re-arm the waiter in the same turn as every read of a wait result, also while holding an ask for Sean.
-  A timeout counts too: re-arm while any seat can still send (a held ask once left a seat's question
-  unanswered for hours).
+- Re-arm the mail waiter whenever it ends, in the same turn as you read its result, also while holding an ask
+  for Sean; a `hous worker wait` ending does not re-arm it. A timeout counts too: re-arm while any seat can
+  still send (a held ask once left a seat's question unanswered for hours).
 - `send --to dispatch:` mail is read only at the seat's next check. Put decision-critical input in a new
   dispatch, or `terminal send` to a mid-turn Claude.
 - Status to Sean at each stage transition: brief, verdict first, plain words (no internal codes), times
@@ -353,10 +339,10 @@ open on purpose.
   ledger worktree; close every idle ledger terminal with no running dispatch.
 - **Remove ledger worktrees when their job ends:** the PR worktree when its PR merges. Panel reviewers
   are read-only and run in the PR worktree; they need no worktree of their own. Before removing one, run
-  `git status --ignored` in it and read the ignored list: a tracked-file diff can't see ignored files, and that is how a merged PR's fixtures were lost (a
-  `*.log` rule ignored them, so its gate passed only in that worktree). Dependencies and build output are
-  expected there. Never remove one with uncommitted or unpushed changes, or an ignored file the work depends
-  on; report it instead.
+  `git status --ignored` in it and read the ignored list: a tracked-file diff can't see ignored files, and
+  that is how a merged PR's fixtures were lost (a `*.log` rule ignored them, so its gate passed only in that
+  worktree). Dependencies and build output are expected there. Never remove one with uncommitted or
+  unpushed changes, or an ignored file the work depends on; report it instead.
 - **Never close a working seat.** Read the screen first.
 - **Don't finish with open items.** An SC's `worker_done` includes its final sweep showing every ledger
   item closed or removed, except named worktrees kept for an open PR. The EC checks this before launching
