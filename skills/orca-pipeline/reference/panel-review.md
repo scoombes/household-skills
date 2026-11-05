@@ -69,8 +69,8 @@ Reviewers do not dig through PR history for any of this.
    - GitHub job log (`command: GitHub Actions job ...`): `exit code:` must be the conclusion `success`.
    - Local gate log (`command: hous ci ...`, `hous test ...` or the suite command): `exit code:` must be
      `0`. A rerun at the same head is a new `--suite` log beside the first; judge the deciding log the PR
-     line names. The other, failed log needs a stated reason (a flake or the environment): a rerun is not a
-     way to bury a real failure, so an unexplained red log is CHANGES_NEEDED.
+     line names. The other, failed log needs a reason on the PR line (a flake or the environment): a rerun
+     is not a way to bury a real failure, so an unexplained red log is CHANGES_NEEDED.
 
    3a. A job of the deciding run with no log file at all = CHANGES_NEEDED.
 

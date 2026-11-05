@@ -71,7 +71,7 @@ edge cases and extra machinery. It is not a reason to leave a UX residual just b
 - No `pkill`/`killall`/kill-by-pattern; stop only PIDs you started.
 - Use housetools (`hous --help`; guide `~/household/housetools/AGENTS.md`): `hous test|up|down` for
   local checks, `hous pr status|wait|merge|logs --task <id>` for merge gates (App token only), `hous worker
-  start|status|check|wait` for seats. `hous ci` is not one rule for every repo: in a repo with a pull-request
+  start|status` for seats. `hous ci` is not one rule for every repo: in a repo with a pull-request
   workflow it is local debugging parity, not merge evidence (the evidence is GitHub CI on the head);
   household-translations and household-site run it natively as their local gate; housetools refuses it, so
   its gate is the full host `hous test` plus the documented specialized suites that apply
@@ -120,12 +120,13 @@ edge cases and extra machinery. It is not a reason to leave a UX residual just b
   > `hous ci`: each run's complete output, untrimmed, goes to
   > `~/household/agent-work/<TICKET>/logs/<40-hex sha>/<suite>.log`, starting with `command:`, `commit:`,
   > `exit code:` (the command's exit code, `0` when green), `start:`/`end:` (UTC). It refuses to overwrite: a
-  > rerun at the same head takes a new `--suite`; keep both logs and name the deciding one on the PR line. A
-  > failed log still needs a reason; a rerun is not a way to bury a real failure. A dirty worktree lands in
-  > `<sha>-dirty/`, which is not evidence for the head: commit first. housetools' `test:docker` and `selftest`
-  > have no log flag: save their output to that same path with that same header by hand. Post one line per
-  > suite on the PR: sha, test count, pass/fail, exit code. Report the log folder path in worker_done. Never
-  > keep private state in a log; evidence that cannot be made safe is incomplete.
+  > rerun at the same head takes a new `--suite`; keep both logs, and name the deciding log and the failed
+  > log's reason on the PR line. A failed log still needs that reason; a rerun is not a way to bury a real
+  > failure. A dirty worktree lands in `<sha>-dirty/`, which is not evidence for the head: commit first.
+  > housetools' `test:docker` and `selftest` have no log flag: save their output to that same path with that
+  > same header by hand. Post one line per suite on the PR: sha, test count, pass/fail, exit code. Report the
+  > log folder path in worker_done. Never keep private state in a log; evidence that cannot be made safe is
+  > incomplete.
 
   Include these two paragraphs verbatim:
   > Keep working until everything the task asks for is done, and only stop to ask when you can't go on
