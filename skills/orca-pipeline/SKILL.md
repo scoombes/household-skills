@@ -319,8 +319,9 @@ Assignment:
 - Status to Sean at each stage transition: brief, verdict first, plain words (no internal codes), times
   in EDT. At night, routine notices also go in the wake-up report; only the waits named in `night-mode`
   stop affected work.
-- Relay exactly one Sean step at a time; parallel seats' Sean asks queue; never re-ask Sean a fact he already
-  reported.
+- Put exactly one Sean step to him at a time; parallel seats' Sean asks queue; never re-ask Sean a fact he
+  already reported. In a sitting, the SC that owns it puts every Sean step and picker to him itself, in its own
+  tab, never through another coordinator (`operating-household-aws` rule 11).
 
 ## Cleanup (gates, not reminders)
 

@@ -68,10 +68,10 @@ on, load `night-mode` for each gate's outcome. AWS reads wait too; Code Owner ap
 still require Sean.
 - Major drift (below).
 - A CRITICAL finding (panel-coordinator.md, CRITICAL halt).
-- Any AWS deploy or AWS write, staging included: the gate is Sean's OK on the approval card of a sitting (agents then run
-  `hous aws apply|run`). Packages READY before the switch (`hous help aws apply` succeeding) finish with `hous pkg run`,
-  including the writes their Waivers section names; nothing new uses that path. Every other step only Sean can do
-  (`operating-household-aws` skill).
+- Any AWS deploy or AWS write, staging included: the gate is Sean's OK on the approval card of a sitting, which the
+  sitting SC asks for (Final sitting); agents then run `hous aws apply|run`. Packages READY before the switch
+  (`hous help aws apply` succeeding) finish with `hous pkg run`, including the writes their Waivers section names;
+  nothing new uses that path. Every other step only Sean can do (`operating-household-aws` skill).
 - A blocking finding still open after 3 panel rounds, a disputed well-formed HIGH, a test budget
   overrun, or a second overrun of the fix-seat time checkpoint (panel-coordinator.md; the checkpoint is
   in repo-testing.md).
@@ -155,10 +155,16 @@ keyboard through a dedicated SC. That SC launches seats to consolidate the run s
 cross-vendor review and execute the approved work. The EC never writes the run sheet or runs commands
 itself. A lone-story SC coordinates its own final sitting through seats.
 
-A coordinator who can reach Sean presents the complete AWS cards or summary and gets the AWS skill's exact
-picker replies, relaying them unchanged to the execution seat. A dispatched seat never uses a local picker
-to ask Sean. If the top coordinator cannot reach him through a picker, AWS waits until he is present in a
-session that can. Existing sign-in, approval, caller, stop-on-failure and Sean-only operations still apply;
+The sitting SC owns every question to Sean in the sitting (Sean: "as teh SC for the sitting you own it"). It
+puts every picker to him itself, in its own tab, where he sits: the sitting OK, every card and summary OK
+(shown complete, with the AWS skill's exact choices) and every Sean step's choice; it passes each chosen
+label unchanged to the execution seat. This is an exception to the Orca preamble's ban on local
+question prompts, because Sean sits at that tab, so its picker reaches him (`operating-household-aws` rule 11).
+When the sitting starts, the EC tells Sean the SC's workspace and tab. The EC never shows a sitting picker
+or asks him a sitting question; if he types a sitting matter in its tab it points him to the SC's tab and
+forwards his exact words to the SC (never an OK, rule 11). The SC tells the EC what Sean chose, for `epic-log.md`.
+A seat never asks Sean; it asks the SC. If Sean is not at the SC's tab, AWS waits until he is. Existing sign-in, approval, caller,
+stop-on-failure and Sean-only operations still apply;
 one sitting is not one blanket permission. Overnight, prepare offline and queue these rows for wake-up. Run
 permitted non-AWS verification without him; phone rows that need him wait. Keep pending rows explicit and
 do not declare the epic verified or complete until they are settled.
