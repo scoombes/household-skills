@@ -43,7 +43,8 @@ description: Applies HouseHold's AWS operating rules (who may run reads and writ
   Failure, interruption or a failed read-back stops the sitting; no later child runs. A replacement needs a new summary
   and a new OK, even for the same stacks or schema steps. Production keeps a separate summary/card and its own OK.
   A general go-ahead ("I trust you, just do it") is neither a card OK nor a sitting write OK.
-- **Asking for an OK**: the SC that owns the sitting asks, itself, in its own tab (rule 11; seats never ask Sean), with the interactive
+- **Asking for an OK**: the SC that owns the sitting asks, itself, in its own tab (with no Orca sitting SC, the agent in Sean's own
+  session asks; rule 11; seats never ask Sean), with the interactive
   question picker (Claude Code `AskUserQuestion`; the Codex equivalent): one question, exactly two options. (1) The approval label,
   exactly as below. (2) `Reject`.
   - Write OKs (card, sitting summary): first show the complete tool-printed card or summary exactly as printed. It ends with its two
@@ -142,9 +143,11 @@ Apart from that, never run a write any other way in either mode. If the hook den
       it". That SC (the EC's dedicated sitting SC, or a lone story's SC) puts every picker to Sean itself, in its own tab, where he sits:
       the sitting OK, every card and summary OK, and every Sean step and its choice. One picker per question, in that one tab: the EC
       never shows a sitting picker or relays one, and no other coordinator or seat puts the same question to him elsewhere (on Nov 6 the
-      EC's copy of the sitting-OK picker got `Reject` while Sean approved in the SC's tab).
-      - This is the one exception to the Orca worker preamble's "Never use a local question prompt such as AskUserQuestion": Sean sits
-        at the sitting SC's tab, so its picker reaches him. The SC's seats still never ask Sean or show a picker; they ask the SC
+      EC's copy of the sitting-OK picker got `Reject` while Sean approved in the SC's tab). With no Orca sitting SC (for example a read
+      in Sean's own direct session), the agent in that session asks him itself, the same way.
+      - This is an exception to the Orca worker preamble's "Never use a local question prompt such as AskUserQuestion" (the other is
+        `orca-pipeline/reference/roles.md`'s picker when Sean is clearly at the keyboard): Sean sits at the sitting SC's tab, so its
+        picker reaches him. The SC's seats still never ask Sean or show a picker; they ask the SC
         (`orca orchestration ask`).
       - The SC tells the EC what Sean chose, for the epic log; it never asks the EC to relay a question or an answer. If Sean raises a
         sitting matter in another coordinator's tab, that coordinator points him to the SC's tab and forwards his exact words to the SC;

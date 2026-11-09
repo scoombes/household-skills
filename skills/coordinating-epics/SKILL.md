@@ -158,11 +158,12 @@ itself. A lone-story SC coordinates its own final sitting through seats.
 The sitting SC owns every question to Sean in the sitting (Sean: "as teh SC for the sitting you own it"). It
 puts every picker to him itself, in its own tab, where he sits: the sitting OK, every card and summary OK
 (shown complete, with the AWS skill's exact choices) and every Sean step's choice; it passes each chosen
-label unchanged to the execution seat. This is the one exception to the Orca preamble's ban on local
-question prompts, because Sean sits at that tab (`operating-household-aws` rule 11). When the sitting starts,
-the EC tells Sean the SC's workspace and tab. The EC never shows a sitting picker or relays a sitting
-question or answer; the SC tells the EC what Sean chose, for `epic-log.md`. A seat never asks Sean; it asks
-the SC. If Sean is not at the SC's tab, AWS waits until he is. Existing sign-in, approval, caller,
+label unchanged to the execution seat. This is an exception to the Orca preamble's ban on local
+question prompts, because Sean sits at that tab, so its picker reaches him (`operating-household-aws` rule 11).
+When the sitting starts, the EC tells Sean the SC's workspace and tab. The EC never shows a sitting picker
+or asks him a sitting question; if he types a sitting matter in its tab it points him to the SC's tab and
+forwards his words to the SC (never an OK, rule 11). The SC tells the EC what Sean chose, for `epic-log.md`.
+A seat never asks Sean; it asks the SC. If Sean is not at the SC's tab, AWS waits until he is. Existing sign-in, approval, caller,
 stop-on-failure and Sean-only operations still apply;
 one sitting is not one blanket permission. Overnight, prepare offline and queue these rows for wake-up. Run
 permitted non-AWS verification without him; phone rows that need him wait. Keep pending rows explicit and
