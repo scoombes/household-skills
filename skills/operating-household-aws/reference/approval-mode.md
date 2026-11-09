@@ -129,6 +129,7 @@ Sitting progress:
 - [ ] 6. Production: own plan, separate summary/card, own OK
 - [ ] 7. Lessons entry
 ```
+The SC that owns the sitting puts every picker below to Sean itself, in its own tab, and no one else shows or relays one; its seats ask the SC (SKILL.md rule 11).
 1. **Prepare (no AWS).** PRs merged; `hous ci` green; `hous lambda check` for Lambda code; the `build-templates` run for the commit has finished
    (its artifact is `cdk-out-<sha>`); every changed stack has its `expected-changes/<env>/<Stack>.json` from the merged PR; the run sheet is reviewed.
    When the sitting's proof uses synthetic accounts, each of them signs in on staging now (one HTTPS sign-in per account, synthetic data, no OK needed) before Sean is asked to sign in,
@@ -138,6 +139,10 @@ Sitting progress:
 2. **Sign-in and sitting OK.** Sean types `! hous aws login household-<env>` (rule 2) and gives the sitting OK through the interactive question picker (exactly two choices: `Approve <env> <scope words>` and `Reject`) after a full plain-words account of the env, stacks and the read/plan scope; `Reject`, "Other" or typed text, cancellation or no answer stops before `--go`. Read the printed link and code from the output and relay them if he asks. Check with `hous aws login --status household-<env>`, then `hous aws whoami --env <env>`. Under this sitting OK, before offering a deploy button, read that its role exists in the target account and that its trust allows the workflow's repository, branch and actor; a template, an earlier sitting or a merged PR is not evidence. If the role is missing or its trust differs, the button is unavailable: use the card route or queue the fix.
 3. **Plan.** `hous aws plan <Stack>... --env <env> --task <ticket> --go "<the chosen Approve label, verbatim>"`. Stop on any refusal ([cards-and-stops.md](cards-and-stops.md#when-a-verb-stops)). Fix by PR, then plan again;
    a refused plan deletes the change sets it made. Note the evidence path and the card id.
+   A card that starts a clock (a temporary grant, a deadline, a time-bound arm such as trap 44's) is built only after the sitting SC has
+   asked Sean and he has confirmed he is present for the whole window; the question tells him the window's length and the end time in EDT
+   it would have if applied now. If he cannot stay, build it later. On Nov 6 a 45-minute grant was applied while Sean was then away for
+   1 h 35 min; the window lapsed and a sixth operator OK was needed.
 4. **Summary or standalone card.** For multiple cards, build and paste the complete sitting summary exactly as printed.
    Then ask with the interactive question picker (one question, exactly the summary's two printed choices: `Approve <sitting id> <12 hex>` and `Reject`).
    Only if he selected the approval label: `hous aws ok <sitting-id> --words "<the chosen label, verbatim>"` (if `ok` refuses the label, stop; never reword or replay), and execute each next child with `hous aws sitting apply <sitting-id> --card <next-child> --task <ticket>`.

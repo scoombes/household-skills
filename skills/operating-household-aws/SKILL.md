@@ -43,8 +43,9 @@ description: Applies HouseHold's AWS operating rules (who may run reads and writ
   Failure, interruption or a failed read-back stops the sitting; no later child runs. A replacement needs a new summary
   and a new OK, even for the same stacks or schema steps. Production keeps a separate summary/card and its own OK.
   A general go-ahead ("I trust you, just do it") is neither a card OK nor a sitting write OK.
-- **Asking for an OK**: the coordinator (or seat) asks with the interactive question picker (Claude Code `AskUserQuestion`; the Codex
-  equivalent): one question, exactly two options. (1) The approval label, exactly as below. (2) `Reject`.
+- **Asking for an OK**: the SC that owns the sitting asks, itself, in its own tab (rule 11; seats never ask Sean), with the interactive
+  question picker (Claude Code `AskUserQuestion`; the Codex equivalent): one question, exactly two options. (1) The approval label,
+  exactly as below. (2) `Reject`.
   - Write OKs (card, sitting summary): first show the complete tool-printed card or summary exactly as printed. It ends with its two
     choices; the approval option is its `Approve <id> <12 hex>` line copied byte for byte (a card: card id + first 12 hex of its
     immutable-card hash; a sitting summary: sitting id + first 12 hex of the summary SHA-256), the second is `Reject`.
@@ -131,7 +132,23 @@ Apart from that, never run a write any other way in either mode. If the hook den
 9. **Lambda code:** before any deploy that ships it, `hous lambda check` must pass in household-api on the commit being deployed.
 10. **Staging proof API and app:** HTTPS calls with synthetic data need no OK. This grants no AWS access.
 11. **Messages to Sean:** plain words, no internal codes (HOUS-/E-/D- ids stay in files and agent messages), times
-    in EDT. Batch every request into one sitting. A card or combined sitting summary goes to him exactly as the tool printed it, with every child shown up front.
+    in EDT. A card or combined sitting summary goes to him exactly as the tool printed it, with every child shown up front.
+    - **Keep his time short.** Sean, about 5 hours into the Nov 6 sitting: "how much of this is left I really disklike sittings", then
+      "we are done lets clean up". Batch every request into one sitting, cut every row that can be automated (app and browser flows run
+      headless, trap 40), and tell him up front how many minutes he is needed, per block and in total. Order the blocks so a stop loses the
+      least: the rows he cares least about (VoiceOver passes, extra cards) go last, and the run sheet marks a stop point after each block,
+      saying what stays proven if he stops there.
+    - **The SC that owns the sitting asks him everything in it.** Sean, Nov 6, to the sitting's SC: "as teh SC for the sitting you own
+      it". That SC (the EC's dedicated sitting SC, or a lone story's SC) puts every picker to Sean itself, in its own tab, where he sits:
+      the sitting OK, every card and summary OK, and every Sean step and its choice. One picker per question, in that one tab: the EC
+      never shows a sitting picker or relays one, and no other coordinator or seat puts the same question to him elsewhere (on Nov 6 the
+      EC's copy of the sitting-OK picker got `Reject` while Sean approved in the SC's tab).
+      - This is the one exception to the Orca worker preamble's "Never use a local question prompt such as AskUserQuestion": Sean sits
+        at the sitting SC's tab, so its picker reaches him. The SC's seats still never ask Sean or show a picker; they ask the SC
+        (`orca orchestration ask`).
+      - The SC tells the EC what Sean chose, for the epic log; it never asks the EC to relay a question or an answer. If Sean raises a
+        sitting matter in another coordinator's tab, that coordinator points him to the SC's tab and forwards his exact words to the SC;
+        it asks him nothing itself, and nothing typed there is an OK.
 12. **Lessons:** `hous aws apply` and `hous aws run --apply` end with a reminder. Every sitting appends at least one
     entry to the work directory's `lessons-pending.md` (what happened, which verb or text should have caught it, the closing change).
     A clean sitting records one entry saying it had no lessons; that entry needs no closing change.
