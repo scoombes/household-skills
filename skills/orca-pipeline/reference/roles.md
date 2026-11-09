@@ -31,7 +31,8 @@ Every coordinator may message Sean directly. With night mode off, ask Sean in pl
 recommendation. There is no timer or default answer; unrelated seats keep working. Use a blocking picker
 only when he is clearly at the keyboard. AWS OKs always use the picker required by
 `operating-household-aws`; ordinary plain-text replies never authorize AWS. In a sitting, only the SC
-that owns it asks Sean anything about the sitting, by picker in its own tab; no other coordinator
+that owns it asks Sean everything about the sitting, in its own tab: a picker for every OK and choice
+(free-text step reports are asked there too); no other coordinator
 shows or relays a sitting picker (`operating-household-aws` rule 11). Seats never ask Sean directly.
 For the overnight question route, see `night-mode`. In a CRITICAL halt, only the top coordinator
 sends the push notification (panel-coordinator.md, CRITICAL halt).

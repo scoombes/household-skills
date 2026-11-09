@@ -162,7 +162,7 @@ label unchanged to the execution seat. This is an exception to the Orca preamble
 question prompts, because Sean sits at that tab, so its picker reaches him (`operating-household-aws` rule 11).
 When the sitting starts, the EC tells Sean the SC's workspace and tab. The EC never shows a sitting picker
 or asks him a sitting question; if he types a sitting matter in its tab it points him to the SC's tab and
-forwards his words to the SC (never an OK, rule 11). The SC tells the EC what Sean chose, for `epic-log.md`.
+forwards his exact words to the SC (never an OK, rule 11). The SC tells the EC what Sean chose, for `epic-log.md`.
 A seat never asks Sean; it asks the SC. If Sean is not at the SC's tab, AWS waits until he is. Existing sign-in, approval, caller,
 stop-on-failure and Sean-only operations still apply;
 one sitting is not one blanket permission. Overnight, prepare offline and queue these rows for wake-up. Run
