@@ -1,12 +1,12 @@
 # Repo testing: lanes, counts, evidence
 
-Per-repo proof and full-evidence lanes for the seven HouseHold repos, plus the evidence, count, time and
+Per-repo proof and full-evidence lanes for the eight HouseHold repos, plus the evidence, count, time and
 retention rules every seat shares. [test-standard.md](test-standard.md) says what makes a test count;
 [panel-review.md](panel-review.md) and [panel-coordinator.md](panel-coordinator.md) say how it is reviewed.
 
 ## Contents
 - Policy version
-- Seven repos and three full-evidence lanes
+- Eight repos and four full-evidence lanes
 - Full evidence at the exact head
 - Historical targeted proof
 - Mutation tools: selection and status
@@ -42,7 +42,7 @@ authorized work. Nothing here installs or runs a tool, and no pilot is a prerequ
 mutation tools' current installation and integration status is in
 [Mutation tools: selection and status](#mutation-tools-selection-and-status).
 
-## Seven repos and three full-evidence lanes
+## Eight repos and four full-evidence lanes
 
 Full gate = the repo's complete applicable gate at the final commit, plus the required targeted proof.
 Capability names describe the inspected snapshots (2026-11-03), not queried GitHub protection settings.
@@ -57,12 +57,53 @@ Snapshot SHAs are `origin/main` of each repo at that date; recheck before relyin
 | household-translations (`e88d2e3`) | Keys, placeholders, staleness and serialization plus semantic language review; generator rollback and unrelated-data preservation; exact consumer parity | **Native `hous ci --web <checkout> --ios <checkout>`** at the translation head; record both committed client SHAs. Generated client PRs have their own gates. |
 | household-site (`342aa5c`) | Static, runtime and edge checks plus focused browser proof for shipped layout, links, motion and JS; no application stack added | **Native `hous ci`** (`site-tests`) at the head. The browser test is separate. HTML copy is shipped behavior, not a prose exemption. |
 | housetools (`06f772b`) | Real CLI entry, exit and effects with controlled process and filesystem boundaries; refusal-before-write and foreign-resource preservation; the affected documented integration only where needed | **Host `hous test`**, the full offline suite, at the head, plus the applicable documented full specialized suites. housetools has no `hous ci` capability (so no `hous ci --list` fallback), and Linux subsets are not macOS parity. |
+| ios-e2e (private `scoombes/ios-e2e`; `hous` surface of housetools `b75be2d`) | Below the journey: the host tests of its pure journey-support code, the manifest, contract and source checks, and the build-for-testing of its one UI target, all in `hous test`, which runs zero journeys, no API and no simulator. A journey is run only where the PR's proof table says a changed rule needs that fidelity | **No GitHub workflow, ever, and no `hous ci`** (refused by name): the full local `hous test` at the head (`e2e.json` checked, `scripts/host-tests.sh`, then `scripts/build-tests.sh` inside one lease of the shared simulator lock; it takes no runner arguments, and `hous test --repeat` and `hous sandbox` are refused), plus the explicit `hous e2e run <suite>` the PR's proof table names. Exit 75 on `hous test` means the lock or load was busy and nothing started. |
 
 Sources, repo-relative: API `AGENTS.md`, `docs/testing.md`, `.github/workflows/ci.yml`; infra `AGENTS.md`,
 `.github/workflows/checks.yml`, `costs.yml`; iOS `AGENTS.md`, `docs/testing-ci-script.md`,
 `.github/workflows/ci.yml`, `scripts/ci.sh`; web `AGENTS.md`, `CI.md`, `qa/README.md`,
 `.github/workflows/ci.yml`; translations `.hous.json`, `scripts/ci.sh`, `README.md`; site `.hous.json`,
-`README.md`, `tests/run.sh`; housetools `.hous.json`, `lib/adapters.ts`, `AGENTS.md`.
+`README.md`, `tests/run.sh`; housetools `.hous.json`, `lib/adapters.ts`, `AGENTS.md`; ios-e2e's `hous` surface is
+housetools' `lib/adapters.ts` (`ios-e2e-v1`), `tools/e2e/README.md` and `docs/commands.md` (`hous e2e`); ios-e2e's
+own `README.md` and `AGENTS.md` are the suite and manifest authority once merged.
+
+### ios-e2e: journeys on demand
+ios-e2e holds the long, expensive end-to-end journeys. They run only when someone asks, never in a GitHub check or
+`hous ci`, and never as a hidden child of `hous test`. For an ios-e2e PR, and for any PR whose proof table requires a
+journey:
+- Lowest faithful proof first. A rule that a host test or a refusal before any resource can show is proved there,
+  not by a journey. A journey is the retained fidelity for what only the real app, API and simulator together can
+  show, and each one run needs a row in the proof table with its suite, its cost and its owner.
+- Exact-head local lane: the full `hous test` at the exact committed head, logged with `--task <TICKET> --suite
+  <name>` (SKILL.md, log requirement). A log for another head, or from a dirty worktree, is not evidence.
+- Targeted journey: `hous e2e list` shows the suites in the committed `e2e.json` (availability, method counts,
+  languages, billing mode), then `hous e2e run <suite> --task <TICKET>` with the refs the proof table names.
+  Refs are fetched from GitHub through the App, so push the head first and pass the exact full sha
+  (`--e2e-ref`, `--ios-ref`, `--api-ref`; each defaults to `main`). Suites: `registration`, `live`, `core`,
+  `subscriptions`, `subscriptions-sandbox` (`hous e2e run` currently refuses the last). `hous e2e run` refuses before
+  any resource (exit 2) an unavailable suite, a wrong protocol or contract, or a missing prerequisite.
+- One lock, one simulator, no shared state: the run takes bounded leases of household-ios's own
+  `/Users/Shared/household-ios-ci.lock` (never removed, replaced or overridden; load under 30; at most 25 minutes
+  each, with work stopped at 20; at least 120 seconds free between leases; at most 45 minutes of waiting), builds
+  and runs on one simulator it owns (`ios-e2e-<pid>`) and a run-scoped TEST API instance with its own database.
+  It never uses :3100 or the shared `household_test` database, and a seat never starts a second simulator or a
+  second holder of the lock. `/Users/Shared/household-ios-e2e-holder.json` only says who holds a lease; it is not
+  locking or cleanup authority. Exit 75 is busy at the first acquisition (nothing started): wait and run again.
+  An interrupted run is recovered with `hous e2e cleanup <run-id>` from the same user, not by hand.
+- Report the evidence paths. The run's folder is `~/household/agent-work/ios-e2e/<run-id>/` (not the story's
+  `logs/<sha>/` folder): `report.json` and `report.md` (the three resolved SHAs, per-method outcomes, cleanup),
+  safe `logs/` and `attachments/`. Exit 0 means every selected method passed and cleanup completed. A skipped,
+  missing, timed-out or unexpected method, zero tests or a cleanup failure is exit 1 and incomplete evidence,
+  never a pass. Give the run id and folder, with the resolved SHAs, in worker_done and on the PR.
+- Safe evidence only. A run keeps only its safe projection of what happened; raw result bundles, the API's logs
+  and private scratch go with the run's `work/` folder. Never copy a raw `.xcresult`, a credential, a mail or push
+  payload or a typed secret into a PR or a report (see [Evidence capture and retention](#evidence-capture-and-retention)).
+- Retention: no `hous` command deletes a report or its safe logs. They follow the same minimums as gate logs (30
+  days after the PR that relies on them merges; 90 days for unresolved rows or pending resources), recorded by the
+  SC in `status.md`; deletion is a later cleanup Sean directs.
+- A journey run is targeted proof, not a full gate: it carries to another head only as
+  [historical proof](#historical-targeted-proof), and a changed `e2e.json`, runner, support source, app ref or API
+  ref invalidates it.
 
 ## Full evidence at the exact head
 
@@ -72,9 +113,10 @@ Sources, repo-relative: API `AGENTS.md`, `docs/testing.md`, `.github/workflows/c
   Keep the head headers, the GitHub conclusion versus local exit-code distinction, the runner summaries,
   required job and selector coverage, and the failure on a missing log. No merge past queued or running
   checks or an unexplained failure. Independently verify any claimed pre-existing failure against main.
-- No-workflow repos (translations, site, housetools): `hous pr status` may pass the remote gate with "no
+- No-workflow repos (translations, site, housetools, ios-e2e): `hous pr status` may pass the remote gate with "no
   remote CI configured". That cannot enforce the local logs. The implementer and fix seats produce them,
-  reviewers inspect them, and the SC checks them before merge. No tool enforcement is claimed.
+  reviewers inspect them, and the SC checks them before merge. No tool enforcement is claimed. For ios-e2e the
+  same check covers the report of each `hous e2e run` the proof table requires ([ios-e2e: journeys on demand](#ios-e2e-journeys-on-demand)).
 - Each required selector's executed outcome is recorded even when its class passes. A skipped, absent
   or setup-failed required selector is incomplete evidence, not a pass.
 - Review preparation (reading the diff, plan and prior findings) may overlap the CI run.

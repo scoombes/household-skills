@@ -28,7 +28,7 @@ Reference files (read when the stage needs them; give seats the path):
 - [reference/test-standard.md](reference/test-standard.md): what makes a test count.
 - [reference/hous-commands.md](reference/hous-commands.md): the `hous` commands seats use instead of their own
   helpers (test output, gate logs, mutant lists, exit 74 and 75); which parts are for coordinators only.
-- [reference/repo-testing.md](reference/repo-testing.md): the seven repos' proof and full-evidence lanes,
+- [reference/repo-testing.md](reference/repo-testing.md): the eight repos' proof and full-evidence lanes,
   counts, time, historical proof, mutation tool selection and status (Stryker for API, `hous mutantkit` for iOS), evidence
   retention, and the policy version (testing-guidance-v1) with its adoption and transition procedure.
 
@@ -73,15 +73,17 @@ edge cases and extra machinery. It is not a reason to leave a UX residual just b
   local checks, `hous pr status|wait|merge|logs --task <id>` for merge gates (App token only), `hous worker
   start|status` for seats. `hous ci` is not one rule for every repo: in a repo with a pull-request
   workflow it is local debugging parity, not merge evidence (the evidence is GitHub CI on the head);
-  household-translations and household-site run it natively as their local gate; housetools refuses it, so
-  its gate is the full host `hous test` plus the documented specialized suites that apply
-  ([repo-testing.md](reference/repo-testing.md)).
+  household-translations and household-site run it natively as their local gate; housetools and ios-e2e
+  refuse it, so housetools' gate is the full host `hous test` plus the documented specialized suites that
+  apply, and ios-e2e's is its local `hous test` gate plus any explicit `hous e2e run <suite>` its proof table
+  names ([repo-testing.md](reference/repo-testing.md)).
 - Use the `hous` commands in `~/.agents/skills/orca-pipeline/reference/hous-commands.md` instead of writing
   your own helper. Seats still end their turn after an ask; that file is not how a seat waits for a reply.
 - PRs open as DRAFT and stay draft until both reviewers APPROVE. GitHub CI runs on every push to the draft
-  (household-api, household-infra, household-ios, household-web). household-translations, household-site and
-  housetools have no pull-request workflow: their evidence is the local full gate for the head
-  ([repo-testing.md](reference/repo-testing.md); log requirement below).
+  (household-api, household-infra, household-ios, household-web). household-translations, household-site,
+  housetools and ios-e2e have no pull-request workflow: their evidence is the local full gate for the head
+  ([repo-testing.md](reference/repo-testing.md); log requirement below). ios-e2e has no GitHub workflow at all,
+  so its journeys never run in a GitHub check or `hous ci`.
 - A finite proof table: for each changed risk, the actual caller, the cheapest faithful layer, any UI/live
   fidelity and its cost, the evidence and its owner ([test-standard.md](reference/test-standard.md) item 1),
   the plan's separate counts of lower-layer changed rules and UI/live scenarios plus expected actual new
@@ -112,11 +114,13 @@ edge cases and extra machinery. It is not a reason to leave a UX residual just b
   > a local parity check for debugging. A gate log is for exactly that head: it never carries over from an old
   > head, including across a rebase.
 
-  > Repos with no pull-request workflow (household-translations, household-site, housetools). Before
+  > Repos with no pull-request workflow (household-translations, household-site, housetools, ios-e2e). Before
   > worker_done, run the repo's full local gate on your final commit (every fix round too; a new commit needs
   > new logs): household-translations `hous ci --web <checkout> --ios <checkout>` (record both client SHAs),
   > household-site `hous ci`, housetools the full host `hous test` plus the documented full specialized suites
-  > that apply (housetools has no `hous ci` capability). Pass `--task <TICKET> --suite <suite>` to `hous test` and
+  > that apply (housetools has no `hous ci` capability), ios-e2e its local `hous test` (the tooling gate:
+  > manifest check, host tests and build-for-testing of its one UI target, zero journeys; ios-e2e has no `hous
+  > ci`). Pass `--task <TICKET> --suite <suite>` to `hous test` and
   > `hous ci`: each run's complete output, untrimmed, goes to
   > `~/household/agent-work/<TICKET>/logs/<40-hex sha>/<suite>.log`, starting with `command:`, `commit:`,
   > `exit code:` (the command's exit code, `0` when green), `start:`/`end:` (UTC). It refuses to overwrite: a
@@ -127,6 +131,17 @@ edge cases and extra machinery. It is not a reason to leave a UX residual just b
   > same header by hand. Post one line per suite on the PR: sha, test count, pass/fail, exit code. Report the
   > log folder path in worker_done. Never keep private state in a log; evidence that cannot be made safe is
   > incomplete.
+  >
+  > ios-e2e journeys are separate from that gate. Run one only when the PR's proof table requires it, by an
+  > explicit `hous e2e run <suite> --task <TICKET>` (never `hous ci`, never a GitHub workflow, never a hidden
+  > child of `hous test`). The refs are fetched from GitHub, so push first and pass the exact pushed head
+  > (`--e2e-ref <40-hex sha>` for an ios-e2e PR, likewise `--ios-ref` and `--api-ref`); the default is `main`.
+  > Report the run's `~/household/agent-work/ios-e2e/<run-id>/` path (`report.json`, `report.md`, safe
+  > `logs/` and `attachments/`) and its three resolved SHAs in worker_done and on the PR. Exit 0 means every
+  > selected method passed and cleanup completed; a nonzero exit, a skipped or missing method or a report not
+  > bound to the head under review is incomplete evidence (exit 75: the simulator lock or load was busy and
+  > nothing started). Never copy a raw result bundle or private state into the PR, and never delete a run
+  > folder (retention: [repo-testing.md](reference/repo-testing.md), Evidence capture and retention).
 
   Include these two paragraphs verbatim:
   > Keep working until everything the task asks for is done, and only stop to ask when you can't go on
@@ -193,17 +208,19 @@ One Run, all Tasks created upfront with deps, one shared worktree unless files c
    AWS nor Sean; put AWS and phone rows on the final-sitting list in `coordinating-epics`. Deferred
    verification stays visibly pending, never PASS.
 7. **Merge** when: both APPROVE verdicts are bound to the head, the head contains current main, GitHub CI
-   passed at the head (`hous pr status` ci gate), or, for translations, site and housetools, the full
+   passed at the head (`hous pr status` ci gate), or, for translations, site, housetools and ios-e2e, the full
    local-gate logs for the head ([repo-testing.md](reference/repo-testing.md); `hous pr status` may say "no
-   remote CI configured" and cannot check those logs, so the SC does), and no more pushes are planned. Main moved after the approvals: a fresh
+   remote CI configured" and cannot check those logs, so the SC does; for ios-e2e, also the report of each
+   `hous e2e run` the PR's proof table requires), and no more pushes are planned. Main moved after the approvals: a fresh
    seat rebases onto `origin/main`. With conflicts, it is a fix round (green GitHub CI at the new head,
    `hous pr logs`; no-workflow repos: the full local-gate logs for the new head; new panel round). Without conflicts the seat pushes and posts one PR comment whose first
    line is exactly `Rebase carry-over @ <40-hex new head> from <40-hex approved head>`. After several
    rebases, still name the commit both seats approved, not the previous rebase's head: verdicts live only
    on the approved commit, so naming another head carries nothing and the PR waits for a new panel. No new
    panel. For repos with a pull-request workflow, GitHub CI on the new head is the check; no `hous ci`
-   is needed. For translations, site and housetools (no pull-request workflow), run the full local gate on
-   the new head and save the new head's complete logs as above. `hous pr merge` carries the approvals
+   is needed. For translations, site, housetools and ios-e2e (no pull-request workflow), run the full local gate on
+   the new head and save the new head's complete logs as above; a required ios-e2e journey run is targeted proof and
+   carries only as historical proof ([repo-testing.md](reference/repo-testing.md)). `hous pr merge` carries the approvals
    only if the change (files, added and removed lines) is identical, and otherwise asks for a new panel
    round. Then mark the PR ready (this starts no run; `hous pr merge` reuses the draft's green run at the
    head). If it needs Sean's Code Owner approval, request it with
