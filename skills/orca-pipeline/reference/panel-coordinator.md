@@ -102,8 +102,8 @@ top coordinator and classifies the finding itself.
 Copy per round:
 ```
 Panel round N (head <sha>):
-- [ ] Full-gate logs for this head exist (`hous pr logs`, one per job; translations, site and housetools:
-  the local full-gate logs per repo-testing.md), untrimmed, commit matches; historical rows marked reused
+- [ ] Full-gate logs for this head exist (`hous pr logs`, one per job; translations, site, housetools and ios-e2e:
+  the local full-gate logs per repo-testing.md, plus each required `hous e2e run` report for ios-e2e), untrimmed, commit matches; historical rows marked reused
   or rerun
 - [ ] Both reviewers launched fresh together (opus high + gpt-6.1-sol high/xhigh), with inputs above
 - [ ] Both verdicts posted, bound to this head; mutant results in
