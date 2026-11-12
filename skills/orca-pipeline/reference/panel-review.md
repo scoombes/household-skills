@@ -66,9 +66,13 @@ Reviewers do not dig through PR history for any of this.
    and start/end time. They post one line per suite on the PR: sha, test count, pass/fail, exit code.
    An ios-e2e PR whose proof table requires a journey also names the explicit `hous e2e run <suite>` run: its
    folder `~/household/agent-work/ios-e2e/<run-id>/` holds `report.json`/`report.md` with the three resolved
-   SHAs, not a gate log. Reviewers check that the report names the head under review, that its exit code was `0`
-   (every selected method passed, none skipped, cleanup completed) and that it holds no private state; they
-   never run a journey themselves. A missing, failed, other-head or unsafe report is CHANGES_NEEDED.
+   SHAs, not a gate log. Reviewers check that the report names the head under review, or, if it names another
+   head, that the PR carries the complete historical-proof record for it (unchanged e2e/ios/api/tools SHAs
+   relevant to the journey, manifest and toolchain; [repo-testing.md](repo-testing.md#historical-targeted-proof));
+   the full local gate (`hous test`) is still at the current head either way. They also check that its exit
+   code was `0` (every selected method passed, none skipped, cleanup completed) and that it holds no private
+   state; they never run a journey themselves. A missing, failed or unsafe report, or an other-head report
+   without that complete record or with any input changed or uncertain, is CHANGES_NEEDED.
 3. Reviewers treat the logs as proof. Common to both kinds: a log whose `commit:` differs from the head, or a
    log without the runner's summary where the job or suite runs a test runner, = CHANGES_NEEDED. The success
    rule differs by kind, because the header line means a different thing in each:
