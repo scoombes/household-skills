@@ -64,7 +64,7 @@ Reviewers do not dig through PR history for any of this.
    `~/household/agent-work/<TICKET>/logs/<40-hex sha>/<suite>.log`, a fixed path every seat can reach (seats'
    own scratchpads are private). Each log starts with the command, sha, exit code (the command's exit code)
    and start/end time. They post one line per suite on the PR: sha, test count, pass/fail, exit code.
-   An ios-e2e PR whose proof table requires a journey also names the explicit `hous e2e run <suite>` run: its
+   Any PR whose proof table requires a `hous e2e run` journey (ios-e2e or another repo) also names the explicit `hous e2e run <suite>` run: its
    folder `~/household/agent-work/ios-e2e/<run-id>/` holds `report.json`/`report.md` with the three resolved
    SHAs, not a gate log. Reviewers check that the report names the head under review, or, if it names another
    head, that the PR carries the complete historical-proof record for it (unchanged e2e/ios/api/tools SHAs

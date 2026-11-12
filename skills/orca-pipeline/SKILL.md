@@ -138,9 +138,11 @@ edge cases and extra machinery. It is not a reason to leave a UX residual just b
   > (`--e2e-ref <40-hex sha>` for an ios-e2e PR, likewise `--ios-ref` and `--api-ref`); the default is `main`.
   > Report the run's `~/household/agent-work/ios-e2e/<run-id>/` path (`report.json`, `report.md`, safe
   > `logs/` and `attachments/`) and its three resolved SHAs in worker_done and on the PR. Exit 0 means every
-  > selected method passed and cleanup completed; a nonzero exit, a skipped or missing method or a report not
-  > bound to the head under review is incomplete evidence (exit 75: the simulator lock or load was busy and
-  > nothing started). Never copy a raw result bundle or private state into the PR, and never delete a run
+  > selected method passed and cleanup completed; a nonzero exit or a skipped or missing method is incomplete
+  > evidence (exit 75: the simulator lock or load was busy and nothing started). The full local gate is always
+  > at the current head; a report for another head counts only with the complete historical-proof record
+  > ([repo-testing.md](reference/repo-testing.md), Historical targeted proof), and is rejected if any input
+  > changed or is uncertain. Never copy a raw result bundle or private state into the PR, and never delete a run
   > folder (retention: [repo-testing.md](reference/repo-testing.md), Evidence capture and retention).
 
   Include these two paragraphs verbatim:
@@ -210,8 +212,8 @@ One Run, all Tasks created upfront with deps, one shared worktree unless files c
 7. **Merge** when: both APPROVE verdicts are bound to the head, the head contains current main, GitHub CI
    passed at the head (`hous pr status` ci gate), or, for translations, site, housetools and ios-e2e, the full
    local-gate logs for the head ([repo-testing.md](reference/repo-testing.md); `hous pr status` may say "no
-   remote CI configured" and cannot check those logs, so the SC does; for ios-e2e, also the report of each
-   `hous e2e run` the PR's proof table requires), and no more pushes are planned. Main moved after the approvals: a fresh
+   remote CI configured" and cannot check those logs, so the SC does; for any PR whose proof table requires a
+   `hous e2e run`, also the report of each such run), and no more pushes are planned. Main moved after the approvals: a fresh
    seat rebases onto `origin/main`. With conflicts, it is a fix round (green GitHub CI at the new head,
    `hous pr logs`; no-workflow repos: the full local-gate logs for the new head; new panel round). Without conflicts the seat pushes and posts one PR comment whose first
    line is exactly `Rebase carry-over @ <40-hex new head> from <40-hex approved head>`. After several
@@ -219,8 +221,9 @@ One Run, all Tasks created upfront with deps, one shared worktree unless files c
    on the approved commit, so naming another head carries nothing and the PR waits for a new panel. No new
    panel. For repos with a pull-request workflow, GitHub CI on the new head is the check; no `hous ci`
    is needed. For translations, site, housetools and ios-e2e (no pull-request workflow), run the full local gate on
-   the new head and save the new head's complete logs as above; a required ios-e2e journey run is targeted proof and
-   carries only as historical proof ([repo-testing.md](reference/repo-testing.md)). `hous pr merge` carries the approvals
+   the new head and save the new head's complete logs as above; a required `hous e2e run` journey report is targeted proof; it
+   counts for the new head only with the complete historical-proof record, and is rejected if any input changed or is uncertain
+   ([repo-testing.md](reference/repo-testing.md), Historical targeted proof). `hous pr merge` carries the approvals
    only if the change (files, added and removed lines) is identical, and otherwise asks for a new panel
    round. Then mark the PR ready (this starts no run; `hous pr merge` reuses the draft's green run at the
    head). If it needs Sean's Code Owner approval, request it with

@@ -33,7 +33,7 @@ the flags are in `~/household/housetools/docs/commands.md`:
 - ios-e2e (on-demand journeys; guide `~/household/housetools/docs/commands.md`, the `hous e2e` section, and
   `tools/e2e/README.md`): `hous test` is its whole local gate (manifest check, host tests, build-for-testing of
   its UI target inside one lease of the shared simulator lock; zero journeys, no runner arguments; exit 75 =
-  busy, nothing started), logged with `--task <ticket> [--suite <name>]` like any other. `hous ci`,
+  busy: UI build not started, host tests already ran), logged with `--task <ticket> [--suite <name>]` like any other. `hous ci`,
   `hous sandbox` and `hous test --repeat` are refused for it by name: it has no workflow and no sandbox, and
   its evidence is that gate at the exact head plus the journeys the proof table names. `hous e2e list [--repo
   <ios-e2e>]` (inspect) reads the suites of the committed `e2e.json`. `hous e2e run <suite> [--ios-ref r]
