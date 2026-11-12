@@ -155,6 +155,13 @@ keyboard through a dedicated SC. That SC launches seats to consolidate the run s
 cross-vendor review and execute the approved work. The EC never writes the run sheet or runs commands
 itself. A lone-story SC coordinates its own final sitting through seats.
 
+ios-e2e journeys are a separate, on-demand lane, not a sitting row: `hous e2e run <suite>` runs only where a PR's
+proof table or the epic's end-of-epic verification list names it, runs on this Mac against a run-scoped local
+TEST API (no AWS, staging or phone), and is never in a GitHub workflow or `hous ci`. When a sitting row depends on a journey result, cross-reference the run
+(its `~/household/agent-work/ios-e2e/<run-id>/` report and the version set it names) instead of repeating the
+run, and keep that row PENDING until the run exits 0 (report outcome passed) at that version set. This adds no approval, sitting
+OK or Sean step ([orca-pipeline repo-testing](../orca-pipeline/reference/repo-testing.md), ios-e2e: journeys on demand).
+
 The sitting SC owns every question to Sean in the sitting (Sean: "as teh SC for the sitting you own it"). It
 puts every picker to him itself, in its own tab, where he sits: the sitting OK, every card and summary OK
 (shown complete, with the AWS skill's exact choices) and every Sean step's choice; it passes each chosen

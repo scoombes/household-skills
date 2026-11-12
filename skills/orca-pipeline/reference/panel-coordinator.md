@@ -102,9 +102,9 @@ top coordinator and classifies the finding itself.
 Copy per round:
 ```
 Panel round N (head <sha>):
-- [ ] Full-gate logs for this head exist (`hous pr logs`, one per job; translations, site and housetools:
-  the local full-gate logs per repo-testing.md), untrimmed, commit matches; historical rows marked reused
-  or rerun
+- [ ] Full-gate logs for this head exist (`hous pr logs`, one per job; translations, site, housetools and ios-e2e:
+  the local full-gate logs per repo-testing.md; any PR whose proof table requires a `hous e2e run` also that
+  run's report), untrimmed, commit matches; historical rows marked reused or rerun
 - [ ] Both reviewers launched fresh together (opus high + gpt-6.1-sol high/xhigh), with inputs above
 - [ ] Both verdicts posted, bound to this head; mutant results in
 - [ ] Each finding sorted: CRITICAL halt / blocks / non-blocking / dropped
