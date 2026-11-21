@@ -22,12 +22,14 @@ description: Applies HouseHold's AWS operating rules (who may run reads and writ
     `Approve staging reads and change-set plans for this sitting, including household-entitlements card-time previews, inspection and enforcing count through the fixed runtime role`.
     Tell Sean the runtime role can write before the picker is shown. This grants no setup, mapping, generic SQL, other AssumeRole or production route.
   - `hous aws database-viewer`, solely through household-infra's pinned reader (`tools/database-viewer/`), for exactly one query of a
-    reviewed read set. The only set is `calendar-cutover-v1`, with the queries `open-series-count` and `population-export`. The reader
-    assumes Household-Staging-DatabaseViewerReader in staging, signs a non-admin DbConnect token and runs that query's reviewed bytes as
+    reviewed read set. The permitted reads are the reviewed read sets merged in household-infra `tools/database-viewer/read-sets/`
+    (today only `calendar-cutover-v1`: `open-series-count` and `population-export`), each run only under a sitting OK whose label names
+    that exact set and its digest prefix. A new or changed set needs a merged household-infra PR with Sean's Code Owner approval and the
+    two-reviewer panel, then a new sitting label; no skill edit is needed per set. The reader assumes Household-Staging-DatabaseViewerReader in staging, signs a non-admin DbConnect token and runs that query's reviewed bytes as
     the SELECT-only database user `household_viewer_reader` in a `READ ONLY` transaction. The sitting OK must contain the exact clause
     `database viewer check reads for calendar-cutover-v1 sha256 <first 12 hex of the set digest>` (today `478be223889d`; take it from
     `--check` at the pinned commit, never from memory); the old phrase `database viewer check reads` alone is refused.
-    It grants no other SQL, query, set or output path, and no setup, mapping, grant, recovery, schema change, write, other AssumeRole,
+    It grants nothing else: no other SQL, query, set, route or output path, and no setup, mapping, grant, recovery, schema change, write, other AssumeRole,
     production route or use of `hous db connect` (that stays Sean's). Its procedure, private-export handling, failure stops and Sean's
     one-time setup are in [approval-mode.md](reference/approval-mode.md#database-viewer-reads).
 - **Write**: every other AWS call (a general `sts assume-role` is a write; the three named reads above are the only AssumeRole exceptions), including `route53 change-resource-record-sets`, `cdk deploy|bootstrap|destroy|rollback|import`

@@ -98,10 +98,13 @@ reads that were Sean's viewer rows. Source of truth: housetools `tools/aws/READM
 `tools/database-viewer/README.md` (the reader contract) and `docs/runbooks/database-viewer-setup.md` (Sean's setup and the release checks).
 - **What is permitted.** Exactly one query id of one reviewed read set per invocation, at a pinned household-infra commit. Today that is
   `calendar-cutover-v1`: `open-series-count` (grouped open series-operation counts and their total) and `population-export` (the calendar
-  population, private). The run sheet's lane for these rows is VR; V stays Sean's viewer row. No SQL text, file, fragment, parameter,
-  output path, env, profile, role or endpoint can be given. A new or changed query is a household-infra PR with the two-reviewer panel and
-  Sean's Code Owner approval, merged before the sitting; a sitting's prep review cannot add one, and a changed manifest is a new set digest
-  that needs a new sitting label.
+  population, private). The permitted reads are the reviewed read sets merged in household-infra `tools/database-viewer/read-sets/`
+  (today only `calendar-cutover-v1`: `open-series-count` and `population-export`), each run only under a sitting OK whose label names that
+  exact set and its digest prefix. A new or changed set needs a merged household-infra PR with Sean's Code Owner approval and the
+  two-reviewer panel, then a new sitting label; no skill edit is needed per set. Nothing else is granted: no other SQL, query, set or
+  route. The run sheet's lane for these rows is VR; V stays Sean's viewer row. No SQL text, file, fragment, parameter, output path, env,
+  profile, role or endpoint can be given. A sitting's prep review cannot add a set, and a changed manifest is a new set digest that needs a
+  new sitting label.
 - **The label.** The sitting OK (`Approve staging <scope words>`) must contain `database viewer check reads for calendar-cutover-v1 sha256
   <first 12 hex of the set digest>` as whole words; it may name the sitting's other reads too. Before the picker, run `--check` for each
   query at the pin and show Sean the account, both query names, what each prints and saves, the set digest and the scratch pin. The OK is a
@@ -110,7 +113,7 @@ reads that were Sean's viewer rows. Source of truth: housetools `tools/aws/READM
 - **Preparation (offline).** An App-token scratch clone of household-infra inside `~/household/agent-work/<task>/`, its HEAD the pin, the
   pin on the freshly fetched `origin/main`, `npm ci` from its lockfile, nothing changed or untracked. hous never fetches, pulls or uses
   Sean's checkout. `--task` takes the story grammar `HOUS-<n>` (for the calendar sitting, `HOUS-662`).
-- **What remains Sean's.** Sign-in and every OK; `hous db connect` (his admin GUI connection; it refuses agents); the reader-role setup,
+- **What remains Sean's.** Sign-in and every OK; `hous db connect` (his admin GUI connection; Sean-only, it refuses a non-interactive terminal); the reader-role setup,
   grants, mapping and verification below; any correction, write or recovery SQL. The calendar sitting's correction step and uncertain-write
   recovery are never VR.
 - **Fresh evidence and private export.** Each invocation gets a new run folder under
@@ -120,7 +123,7 @@ reads that were Sean's viewer rows. Source of truth: housetools `tools/aws/READM
   named consumer (the offline calendar planner), never print it, paste it into chat or copy it into a log or safe gate folder, and delete it
   in the sitting's named cleanup step, keeping the safe digest and count record. A downstream step takes the path that invocation printed,
   never an older export.
-- **Failure stops.** Any result other than PASS (`FAIL reason=<r>`, exit 2 for usage or label, 4 for no session, 1 otherwise) halts the
+- **Failure stops.** Any result other than PASS (`FAIL reason=<r>`, exit 2 for usage, label, read-set or manifest refusals and a query outside the set, 4 for no session, nonzero otherwise) halts the
   dependent sitting step. Never substitute a zero count or empty export, never retry inside the row, never fall back to `hous db connect`,
   psql, an admin connection or a picker. When the FAIL line names a private file left at the artifact path, delete it in the cleanup step.
   The tool does not judge whether a count is acceptable; the reviewed run sheet decides.
