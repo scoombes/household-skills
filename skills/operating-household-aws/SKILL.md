@@ -9,7 +9,7 @@ description: Applies HouseHold's AWS operating rules (who may run reads and writ
 - **Sean**: the human owner. Only he signs in to AWS.
 - **Read**: an AWS call that only describes, gets, lists or looks up (`describe-*`, `get-*`, `list-*`, `lookup-*`,
   `sts get-caller-identity`, `accessanalyzer validate-policy|check-*`), plus `cdk diff`, `cdk synth` and
-  `cdk --unstable=diagnose diagnose`. Two scoped exceptions, each a read under the sitting OK:
+  `cdk --unstable=diagnose diagnose`. Three scoped exceptions, each a read under the sitting OK:
   - `hous aws inbox-ownership`, solely through its pinned infra client: it assumes Household-Staging-InboxOwnershipReader in staging, signs a non-admin DbConnect token, and
     calls only household_inbox_checks.ownership_counts; it grants no setup, mapping, generic SQL, other AssumeRole or production route.
     It returns counts only, and the sitting OK (`Approve staging <scope words>`) must explicitly name these staging ownership reads
@@ -21,7 +21,18 @@ description: Applies HouseHold's AWS operating rules (who may run reads and writ
     The sitting OK must name them: the label must contain the words `staging`, `household-entitlements` and `enforcing count` (case-insensitive, after the exact `Approve staging ` grammar), for example
     `Approve staging reads and change-set plans for this sitting, including household-entitlements card-time previews, inspection and enforcing count through the fixed runtime role`.
     Tell Sean the runtime role can write before the picker is shown. This grants no setup, mapping, generic SQL, other AssumeRole or production route.
-- **Write**: every other AWS call (a general `sts assume-role` is a write; the two named reads above are the only AssumeRole exceptions), including `route53 change-resource-record-sets`, `cdk deploy|bootstrap|destroy|rollback|import`
+  - `hous aws database-viewer`, solely through household-infra's pinned reader (`tools/database-viewer/`), for exactly one query of a
+    reviewed read set. The permitted reads are the reviewed read sets merged in household-infra `tools/database-viewer/read-sets/`
+    (today only `calendar-cutover-v1`: `open-series-count` and `population-export`), each run only under a sitting OK whose label names
+    that exact set and its digest prefix. A new or changed set needs a merged household-infra PR with Sean's Code Owner approval and the
+    two-reviewer panel (plus a housetools release if it needs a new output kind, since hous validates each output kind with a fixed serializer), then a new sitting label; no skill edit is needed per set. The reader assumes Household-Staging-DatabaseViewerReader in staging, signs a non-admin DbConnect token and runs that query's reviewed bytes as
+    the SELECT-only database user `household_viewer_reader` in a `READ ONLY` transaction. The sitting OK must contain the exact clause
+    `database viewer check reads for <set> sha256 <first 12 hex of that set's digest>` (today `calendar-cutover-v1 sha256 478be223889d`; take it from
+    `--check` at the pinned commit, never from memory); the old phrase `database viewer check reads` alone is refused.
+    It grants nothing else: no other SQL, query, set, route or output path, and no setup, mapping, grant, recovery, schema change, write, other AssumeRole,
+    production route or use of `hous db connect` (that stays Sean's). Its procedure, private-export handling, failure stops and Sean's
+    one-time setup are in [approval-mode.md](reference/approval-mode.md#database-viewer-reads).
+- **Write**: every other AWS call (a general `sts assume-role` is a write; the three named reads above are the only AssumeRole exceptions), including `route53 change-resource-record-sets`, `cdk deploy|bootstrap|destroy|rollback|import`
   and executing a change set.
   - Building a change set and uploading CDK assets are **plan steps**. They run only inside `hous aws plan`, under the sitting OK.
 - **Sitting OK**: Sean's explicit OK for a named scope (which stacks, which account), recorded verbatim in the work
@@ -80,7 +91,8 @@ Run `hous help aws apply`. Probes like this, file reads, `cdk synth` and `hous c
     Families 3 to 6 exist only when the installed tooling exposes them: check `hous aws run --allowlist`. If an operation is not listed, it is not available; do not improvise another way (raw writer, `--dir`, generic SQL), and wait for the tooling update.
     This adds no other database command, no production route and no recovery route: recovery SQL stays Sean's, in his database viewer.
   - Sean-only inbox setup: household-infra's inbox setup tool (`tools/inbox-ownership/src/setup-cli.ts`) is run by Sean alone, in his own terminal, after he has seen the full pinned command source and given its own separate exact OK. Agents run only its offline `--show-plan` and `--help`. It is not a card, an exemption or a route, and no agent executes the live setup.
-  - The two database read routes: `hous aws inbox-ownership` and `hous aws household-entitlements inspect` (see Terms, Read) are reads under the current explicitly scoped sitting OK (`Approve staging <scope words>` naming these reads), never a card. The IAM role card and the reviewed database setup SQL (roles, schema, function, role mapping) remain writes with their own separate exact OKs; these exceptions cover neither, nor any generic SQL, other AssumeRole or production use.
+  - Sean-only viewer setup: household-infra's database viewer setup (`sql/dsql/staging-database-viewer/`, runbook `docs/runbooks/database-viewer-setup.md`) is Sean's alone, under its own separate exact OK: the plain-SELECT preflight in his database viewer, then the setup and verification files in his own terminal. No agent runs any of it ([approval-mode.md](reference/approval-mode.md#database-viewer-reads)).
+  - The three database read routes: `hous aws inbox-ownership`, `hous aws household-entitlements inspect` and `hous aws database-viewer` (see Terms, Read) are reads under the current explicitly scoped sitting OK (`Approve staging <scope words>` naming these reads), never a card. The IAM role cards and the reviewed database setup SQL (roles, schema, function, grants, role mapping) remain writes with their own separate exact OKs; these exceptions cover neither, nor any generic SQL, other AssumeRole or production use.
   - Follow [reference/approval-mode.md](reference/approval-mode.md) exactly.
   - New work gets a run sheet. A gate package, harness, fakes, mutants, receipts or `packages-index.md` is never written (rule 13).
 - **It fails (unknown command): Sean-runs mode, the fallback before the switch or if the tool is not updated.**
