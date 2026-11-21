@@ -25,9 +25,9 @@ description: Applies HouseHold's AWS operating rules (who may run reads and writ
     reviewed read set. The permitted reads are the reviewed read sets merged in household-infra `tools/database-viewer/read-sets/`
     (today only `calendar-cutover-v1`: `open-series-count` and `population-export`), each run only under a sitting OK whose label names
     that exact set and its digest prefix. A new or changed set needs a merged household-infra PR with Sean's Code Owner approval and the
-    two-reviewer panel, then a new sitting label; no skill edit is needed per set. The reader assumes Household-Staging-DatabaseViewerReader in staging, signs a non-admin DbConnect token and runs that query's reviewed bytes as
+    two-reviewer panel (plus a housetools release if it needs a new output kind, since hous validates each output kind with a fixed serializer), then a new sitting label; no skill edit is needed per set. The reader assumes Household-Staging-DatabaseViewerReader in staging, signs a non-admin DbConnect token and runs that query's reviewed bytes as
     the SELECT-only database user `household_viewer_reader` in a `READ ONLY` transaction. The sitting OK must contain the exact clause
-    `database viewer check reads for calendar-cutover-v1 sha256 <first 12 hex of the set digest>` (today `478be223889d`; take it from
+    `database viewer check reads for <set> sha256 <first 12 hex of that set's digest>` (today `calendar-cutover-v1 sha256 478be223889d`; take it from
     `--check` at the pinned commit, never from memory); the old phrase `database viewer check reads` alone is refused.
     It grants nothing else: no other SQL, query, set, route or output path, and no setup, mapping, grant, recovery, schema change, write, other AssumeRole,
     production route or use of `hous db connect` (that stays Sean's). Its procedure, private-export handling, failure stops and Sean's

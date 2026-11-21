@@ -98,15 +98,15 @@ reads that were Sean's viewer rows. Source of truth: housetools `tools/aws/READM
 `tools/database-viewer/README.md` (the reader contract) and `docs/runbooks/database-viewer-setup.md` (Sean's setup and the release checks).
 - **What is permitted.** Exactly one query id of one reviewed read set per invocation, at a pinned household-infra commit. Today that is
   `calendar-cutover-v1`: `open-series-count` (grouped open series-operation counts and their total) and `population-export` (the calendar
-  population, private). The permitted reads are the reviewed read sets merged in household-infra `tools/database-viewer/read-sets/`
-  (today only `calendar-cutover-v1`: `open-series-count` and `population-export`), each run only under a sitting OK whose label names that
+  population, private). The permitted reads are the reviewed read sets merged in household-infra `tools/database-viewer/read-sets/`,
+  each run only under a sitting OK whose label names that
   exact set and its digest prefix. A new or changed set needs a merged household-infra PR with Sean's Code Owner approval and the
-  two-reviewer panel, then a new sitting label; no skill edit is needed per set. Nothing else is granted: no other SQL, query, set or
+  two-reviewer panel (plus a housetools release if it needs a new output kind, since hous validates each output kind with a fixed serializer), then a new sitting label; no skill edit is needed per set. Nothing else is granted: no other SQL, query, set or
   route. The run sheet's lane for these rows is VR; V stays Sean's viewer row. No SQL text, file, fragment, parameter, output path, env,
   profile, role or endpoint can be given. A sitting's prep review cannot add a set, and a changed manifest is a new set digest that needs a
   new sitting label.
-- **The label.** The sitting OK (`Approve staging <scope words>`) must contain `database viewer check reads for calendar-cutover-v1 sha256
-  <first 12 hex of the set digest>` as whole words; it may name the sitting's other reads too. Before the picker, run `--check` for each
+- **The label.** The sitting OK (`Approve staging <scope words>`) must contain `database viewer check reads for <set> sha256
+  <first 12 hex of that set's digest>` (today `calendar-cutover-v1 sha256 478be223889d`) as whole words; it may name the sitting's other reads too. Before the picker, run `--check` for each
   query at the pin and show Sean the account, both query names, what each prints and saves, the set digest and the scratch pin. The OK is a
   current-sitting read OK only: not a write OK and not reusable in a later sitting. A read set changed after approval needs a new picker,
   never an edited copy of his old label.
