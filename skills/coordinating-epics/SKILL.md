@@ -150,7 +150,8 @@ reaches it (`consumer_fenced`); only replies to its own asks get through.
 SCs hand staging and phone rows to the EC with the action, dependencies, required proof and what needs
 Sean. Keep one final-sitting list alongside the separate end-of-epic verification list; cross-reference
 shared rows so they run once. Each row also carries its owner, reason, exact version set and
-PASS/FAIL/PENDING status. After the code stories merge, the EC coordinates one sitting with Sean at the
+PASS/FAIL/PENDING status, and meets `operating-household-aws` [Sitting readiness](../operating-household-aws/reference/approval-mode.md#sitting-readiness)
+before it is called ready. After the code stories merge, the EC coordinates one sitting with Sean at the
 keyboard through a dedicated SC. That SC launches seats to consolidate the run sheet, obtain its normal
 cross-vendor review and execute the approved work. The EC never writes the run sheet or runs commands
 itself. A lone-story SC coordinates its own final sitting through seats.
