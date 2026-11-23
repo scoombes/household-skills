@@ -11,28 +11,33 @@ flag and message: `housetools/tools/aws/README.md` and `tools/aws/src/`. The sit
 |---|---|
 | `hous aws login household-<env>` | Sean's sign-in: he types `! hous aws login household-<env>` (or runs it in his terminal). It prints the link and code at once. Agents never run it for him; check with `hous aws login --status household-<env>` (SKILL.md rule 2) |
 | `hous aws whoami --env <env> [--stack <Stack>]` | Prints the caller. Exit 4 no session, exit 1 wrong account |
-| `hous aws plan <Stack>... --env <env> --task <ticket> --go "Approve <env> <scope words>" [--commit <sha>]` | Stacks in deploy order, all in one call. Builds change sets from the CI-built templates, **executes nothing**, checks them, prints the card |
+| `hous aws plan <Stack>... --env <env> --task <ticket> --go "Approve <env> <scope words>" [--commit <sha>]` | Stacks in deploy order, all in one call. Builds change sets from the CI-built templates, **executes nothing**, checks them, saves the full card document and prints only its metadata and verified `show` commands, not the card |
+| `hous aws show <card-or-sitting-id> --page <n>` / `--pager` | Local only: shows the saved approval document exactly as created, after checking its bytes against the creation-time digest: 120-line pages with their digest/page metadata for chat, or Sean's pager in his Terminal ([Showing the approval document](#showing-the-approval-document)) |
 | `hous aws ok <card-or-sitting-id> --words "<the chosen Approve label, verbatim>"` | Records his OK on a shown standalone card or complete sealed sitting summary only if it is exactly the `Approve <id> <12 hex>` line that card or summary printed; anything else (`Reject`, typed text) records nothing, exit 2 |
-| `hous aws sitting card <card>... --task <ticket>` | Local only: seal fully built, shown cards in execution order; print every child's full content, ids and hashes |
-| `hous aws sitting apply <sitting-id> --card <next-child> --task <ticket>` | Execute only the next listed card once through the existing apply/run gates; first failure stops the whole sitting |
+| `hous aws sitting card <card>... --task <ticket>` | Local only: seal fully built, shown cards in execution order; save the full summary document (every child's full content, ids and hashes) and print only its metadata and verified `show` commands |
+| `hous aws sitting apply <sitting-id> --card <next-child> --task <ticket> --detach` | Launch only the next listed card once, as a detached run, through the existing apply/run gates; first failure stops the whole sitting |
 | `hous aws sitting stop <sitting-id>` | Local only: close the sitting on a run-sheet check failure or when the session ends; unused permission cannot resume |
 | `hous aws check <read-or-plan.json>` | Offline: check an AWS read/write-plan file against recorded CLI response structure and write its local check receipt; predicate results are information only; grants no AWS permission |
-| `hous aws apply <card> --task <ticket>` | Runs exactly the change sets on an OK'd card, then the read-backs |
+| `hous aws apply <card> --task <ticket> --detach` | Launches a detached run of exactly the change sets on an OK'd card, then the read-backs |
+| `hous aws apply-status <run-id> [--output]` / `--card <card-id> [--output]` | Observes one detached run (state, phase, hashes, attempts); `--output` replays its verb output so far or in full. Starts, stops and repairs nothing; no AWS call |
+| `hous aws apply-wait <run-id> [--timeout <s>]` | Bounded wait for the run's final record; then replays its complete verb output and exits with the operation's code. Exit 3 is an observation timeout only ([Detached launch and observation](#detached-launch-and-observation)) |
 | `hous aws read <name or file.json> --env <env> [--stack <Stack>]` | Named reads: `stack-status`, `stack-outputs`, `termination-protection`, `change-sets`, `failed-events` (each needs `--stack`), or a read file. Reports every step (`PASS`/`FAIL`); exit 1 if any FAIL |
 | `hous aws inbox-ownership` (task, row label, boundary, sitting OK, absolute scratch `infraDir`, full 40-hex `infraCommit`) | A read under the current explicitly scoped sitting OK (`--go "Approve staging reads for this sitting, including hous aws inbox-ownership and its fixed count reads"` or another `Approve staging <scope words>` naming these reads), solely through its pinned infra client: it assumes Household-Staging-InboxOwnershipReader in staging, signs a non-admin DbConnect token, and calls only household_inbox_checks.ownership_counts; it grants no setup, mapping, generic SQL, other AssumeRole or production route. Prints the row/boundary labels and four counts only; a failure is a fixed category with no fabricated zero counts |
 | `hous aws household-entitlements inspect` (`--task`, sitting `--go`, absolute scratch `--infra-dir` and `--api-dir`, full 40-hex `--infra-commit` and `--api-commit`, `--household` one lowercase household UUID) | A read under the current explicitly scoped sitting OK whose label contains `staging`, `household-entitlements` and `enforcing count` (for example `--go "Approve staging reads and change-set plans for this sitting, including household-entitlements card-time previews, inspection and enforcing count through the fixed runtime role"`). It takes no action, expiry, reason, expectation or apply. It goes through the pinned infra entry and the fixed staging runtime role, **which can write**; it is read-only because the reviewed branches and tests forbid dispatching an action. Prints `household-entitlements inspect <id>`, then one `<label> <value>` line each for `authorityRow`, `storedRevision`, `effectiveRevision`, `source` (`none`, `test`, `operator` or `provider`), `accessState` (`free`, `trial`, `paid`, `grace` or `revoked`), `renewal` (`enabled`, `disabled` or `unknown`), `periodEnd`, `enforcementEnabled`, `effectiveTier` (`free` or `premium`), `enforcingTotal` and `enforcingOther` (never a household list), then `closeCheck: PASS` (total 1, other 0, the named household enforcing) or `closeCheck: FAIL`. A successful read always exits 0, so a legitimate uncertainty inspection may show `FAIL`; read the `closeCheck:` line, not the exit code. A failed read exits 1 with `hous aws household-entitlements inspect: FAIL reason=<code>` (a bounded code, for example `database_read` or `identity_refused`); an unusable record stops with `the inspect record is <why>: nothing is taken from it`. A scope label that does not name the reads is refused before anything runs: `--go must name these reads: household-entitlements and enforcing count on staging (the runtime role behind them can write; a general go-ahead is not that OK)` |
-| `hous aws database-viewer --task HOUS-<n> --set <set> --query <query> --go "<the chosen Approve label, verbatim>" --infra-dir <absolute scratch clone in ~/household/agent-work/<task>/> --infra-commit <40 hex>` | A read under the current sitting OK whose label contains the exact clause `database viewer check reads for <set> sha256 <first 12 hex of the set digest>` as whole words. One query of a reviewed household-infra read set (today only `calendar-cutover-v1`: `open-series-count`, `population-export`), run by the pinned reader as `household_viewer_reader` in a `READ ONLY` transaction. Prints the set, query, both digests, the private artifact's path, digest and size, and the counts only; never export rows. A failure is `query=<q>: FAIL reason=<r>` with no count or digest claim. Details in [Database viewer reads](#database-viewer-reads) |
+| `hous aws database-viewer --task HOUS-<n> --set <set> --query <query> --go "<the chosen Approve label, verbatim>" --infra-dir <absolute scratch clone in ~/household/agent-work/<task>/> --infra-commit <40 hex>` | A read under the current sitting OK whose label contains the exact clause `database viewer check reads for <set> sha256 <first 12 hex of the set digest>` as whole words. One query of a reviewed household-infra read set (the reviewed sets include `calendar-cutover-v1`: `open-series-count`, `population-export`; and `calendar-cutover-v2`: those two plus `population-group-count`), run by the pinned reader as `household_viewer_reader` in a `READ ONLY` transaction. Prints the set, query, both digests, the private artifact's path, digest and size, and the counts only; never export rows. A failure is `query=<q>: FAIL reason=<r>` with no count or digest claim. Details in [Database viewer reads](#database-viewer-reads) |
 | `hous aws database-viewer --check --task HOUS-<n> --set <set> --query <query> --infra-dir <abs> --infra-commit <40 hex>` | Offline, no `--go`: the same set, pin and clone checks; prints the set digest, the sitting clause, the pin and each query's digest, file and what it prints and saves (for the picker text). No AWS call, no run record, authorizes nothing |
 | `hous aws run --allowlist` | Prints the write operations `run` supports (`tools/aws/src/run-allowlist.ts`). It is also how you learn whether the installed tooling exposes the fixed database operations below |
-| `hous aws run --card <plan.json> --task <ticket> --go "Approve <env> <scope words>"` | Makes a card for writes outside CloudFormation |
-| `hous aws run --apply <card> --task <ticket>` | Runs exactly that card's commands (or its fixed `dsql-proof` operations, in order) |
+| `hous aws run --card <plan.json> --task <ticket> --go "Approve <env> <scope words>"` | Makes a card for writes outside CloudFormation: saves the full card document and prints only its metadata and verified `show` commands |
+| `hous aws run --apply <card> --task <ticket> --detach` | Launches a detached run of exactly that card's commands (or its fixed `dsql-proof` operations, in order) |
 | `hous aws hook status` | Is the write-blocking hook installed in Claude Code and Codex, are the Codex rules there, does Codex trust it |
 
 Every verb halts at the first failure and never retries a write; `read` runs every step and reports each, but still stops at once with no session or access denied. The verbs that contact AWS (`whoami`, `plan`, `apply`, `read`, and `run` with `--card` or `--apply`) check the caller
 and print `hous aws: evidence: <dir>` last. `sitting apply` preserves these checks for every child and records the ordered child evidence paths.
-The local-only ones (`ok`, `check`, `sitting card`, `sitting stop`, the `hook` verbs, `run --allowlist`) make no AWS calls: `ok` only updates the card or summary (its words, time, relayer and approved hash),
+For `apply`, `run --apply` and `sitting apply` that output is the detached run's log: read it in the final `apply-wait` replay or `apply-status <run-id> --output`.
+The local-only ones (`ok`, `check`, `show`, `sitting card`, `sitting stop`, the `hook` verbs, `run --allowlist`) make no AWS calls; nor do the observers `apply-status` and `apply-wait`: `ok` only updates the card or summary (its words, time, relayer and approved hash),
 and `hook check` logs a denial (or a note) to `~/.local/state/hous/aws/hook.log`.
 Exit codes: 0 done, 1 stopped, 2 usage or refusal (including a `--go` or `--words` that is not the exact approval label), 4 no session, 10 an AWS failure inside `apply.sh`.
+A detached launch that exits 70 printed a run ID whose start is uncertain: observe it, never launch again. `apply-wait` replays a final run and exits with the operation's code (2, 3, 70, 71 and 74 become 1); its own codes are 3 observation timed out (the run goes on; safe to repeat), 70 unknown or lost (never success, never permission to run again), 71 incomplete or conflicting final evidence and 74 replay not delivered (the run is unaffected; observe again).
 
 A read file is `{"schemaVersion": 1, "env": "<env>", "steps": [{"argv": ["<service>", "<read-op>", ...], "region"?: "<r>", "expect"?: {"equals": v} | {"matches": "re"} | {"nonEmpty": true}, "project"?: "<dotted path>", "to"?: "<new file>"}]}`.
 `hous` adds profile, region and output; it refuses an argv that is not a read.
@@ -54,8 +59,23 @@ order, each with the tool's own preflight, statements, practice-run cleanup and 
 Sean's recovery, a new card (fresh practice run and live pair, fresh result paths) and a new OK. If the failed card belonged to a sitting summary,
 that summary is spent too: every remaining card stops, and replacement or later-built cards need a new complete summary and new OK.
 Never delete a card's or summary's execution marker.
-Give `run --apply` and `sitting apply` a tool timeout long enough for their printed bounds, or launch once in a resumable background session.
-Never interrupt an in-flight apply to obtain a quicker answer; a lost tool reply is not permission to restart it.
+Launch and observe every apply as [Detached launch and observation](#detached-launch-and-observation) says.
+
+### Detached launch and observation
+Launch each approved card once with `hous aws apply <card> --task <ticket> --detach`, `hous aws run --apply <card> --task <ticket> --detach`,
+or `hous aws sitting apply <sitting> --card <next> --task <ticket> --detach`, as appropriate (without `--detach` each refuses at once,
+exit 2, and prints the launch form).
+- Its first successful return means a run was accepted, not that the operation passed. Save the run ID, then use
+  `hous aws apply-status <run-id>` or bounded `hous aws apply-wait <run-id>` to observe that same run; if the launch reply is lost use
+  `hous aws apply-status --card <id>`.
+- Final wait replays the verb's complete output; `apply-status <run-id> --output` shows it on demand. Read PASS/FAIL, read-backs,
+  triage, next-card and lessons lines before continuing.
+- A waiter timeout ends only observation. Never repeat apply to reconnect. Only a positively final refused-before-start record proving
+  no claim and no writer entry can permit a new attempt, and every existing authorization gate must still pass. Anything claimed,
+  spent, stopped, failed or uncertain remains blocked; never clear claims or restart a worker to recover it.
+- The run sheet's between-card checks still precede each next explicit child launch. `sitting stop` closes remaining permission and
+  lets an already-running card finish.
+- Internal operation bounds still apply; the foreground tool timeout is only an observation bound.
 
 ## Sitting readiness
 Every sitting (AWS, phone or purchase) meets this before its sheet is called ready. Read it when planning, when reviewing the sheet, and before downtime or a phone row.
@@ -95,7 +115,7 @@ Prepare as for a schema card: both scratch clones clean, each pin on the refresh
 - `dsql-proof.verify-init` is a **writer, not a read**: one pinned API integrity runner checks the complete target chain against the shipping artifact manifest (matching head digest), committing and removing synthetic probe rows under a generated namespace, with separate admin and runtime identities.
   The card shows every statement in full. It does not repair or clean up an interrupted earlier run, and a matching digest does not prove the artifact is deployed: the run sheet binds the manifest to the published artifact.
 - Each result passes only when the tool's own exact, operation-specific read-back passes: every statement and the ledger for a step; a `COMPLETED` result and the tool's own postcondition read-back for the backfill; a durable `COMPLETED` record **and** `passed: true` for verify. A zero exit alone is not a pass.
-- The first failure, interruption, timeout or failed read-back **spends the card** and stops its sitting summary; a live child is never retried. A timeout can leave partial work or probes: do not run cleanup SQL. Recovery is data-preserving and forward, and Sean's route when the tool does not support the state; a replacement is a new card, a new summary and a new OK. The card prints its time bounds (the verifier's is fixed); give `run --apply` and `sitting apply` a tool timeout above them.
+- The first failure, interruption, timeout or failed read-back **spends the card** and stops its sitting summary; a live child is never retried. A timeout can leave partial work or probes: do not run cleanup SQL. Recovery is data-preserving and forward, and Sean's route when the tool does not support the state; a replacement is a new card, a new summary and a new OK. The card prints its time bounds (the verifier's is fixed); they are internal operation bounds. Launch `run --apply` and `sitting apply` with `--detach` and observe them as [Detached launch and observation](#detached-launch-and-observation) says: a waiter timeout ends only observation, never the operation.
 
 ### Writer stop and restart
 This is the one writer procedure; [Exact sitting summaries](#exact-sitting-summaries) names its order and summary boundaries. Staging data is never reset, recreated or dropped. `dsql-proof.household-entitlements` is exempt: it needs no stop, and runtime concurrency allows it after the writers restart.
@@ -120,9 +140,10 @@ Readiness guards for the stop:
 `hous aws database-viewer` is the third named read exception (SKILL.md Terms, Read) and the only agent route for the staging
 reads that were Sean's viewer rows. Source of truth: housetools `tools/aws/README.md` ("`database-viewer`"), household-infra
 `tools/database-viewer/README.md` (the reader contract) and `docs/runbooks/database-viewer-setup.md` (Sean's setup and the release checks).
-- **What is permitted.** Exactly one query id of one reviewed read set per invocation, at a pinned household-infra commit. Today that is
-  `calendar-cutover-v1`: `open-series-count` (grouped open series-operation counts and their total) and `population-export` (the calendar
-  population, private). The permitted reads are the reviewed read sets merged in household-infra `tools/database-viewer/read-sets/`,
+- **What is permitted.** Exactly one query id of one reviewed read set per invocation, at a pinned household-infra commit. The reviewed
+  sets include v1 (`calendar-cutover-v1`: `open-series-count`, grouped open series-operation counts and their total, and
+  `population-export`, the calendar population, private) and v2 (`calendar-cutover-v2`: those two plus `population-group-count`, the
+  declared group count). The permitted reads are the reviewed read sets merged in household-infra `tools/database-viewer/read-sets/`,
   each run only under a sitting OK whose label names that
   exact set and its digest prefix. A new or changed set needs a merged household-infra PR with Sean's Code Owner approval and the
   two-reviewer panel (plus a housetools release if it needs a new output kind, since hous validates each output kind with a fixed serializer), then a new sitting label; no skill edit is needed per set. Nothing else is granted: no other SQL, query, set or
@@ -130,10 +151,15 @@ reads that were Sean's viewer rows. Source of truth: housetools `tools/aws/READM
   profile, role or endpoint can be given. A sitting's prep review cannot add a set, and a changed manifest is a new set digest that needs a
   new sitting label.
 - **The label.** The sitting OK (`Approve staging <scope words>`) must contain `database viewer check reads for <set> sha256
-  <first 12 hex of that set's digest>` (today `calendar-cutover-v1 sha256 478be223889d`) as whole words; it may name the sitting's other reads too. Before the picker, run `--check` for each
-  query at the pin and show Sean the account, both query names, what each prints and saves, the set digest and the scratch pin. The OK is a
-  current-sitting read OK only: not a write OK and not reusable in a later sitting. A read set changed after approval needs a new picker,
-  never an edited copy of his old label.
+  <first 12 hex of that set's digest>` as whole words, taking that prefix from `--check` at the pin, never from memory; it may name the
+  sitting's other reads too. Before the sitting picker, run the offline `--check` for each selected query at the reviewed pin and show
+  Sean the account, all selected query names, their outputs (what each prints and saves), the current set digest and scratch pin. Do not
+  reuse the old v1 digest. The OK is a current-sitting read OK only: not a write OK and not reusable in a later sitting. A read set changed
+  after approval needs a new picker, never an edited copy of his old label.
+- **Population witness.** For a population witness, take P and W as separate `population-export` executions and G as the separate
+  `population-group-count` query. These are independent executions with a shared reader/client and role; they replace the Sean step that
+  v1 lacked a group-count query to perform. They do not independently test the admin path or detect every viewer-wide common fault. Keep
+  activation, quiet-window, separate-artifact and cleanup rules unchanged.
 - **Preparation (offline).** An App-token scratch clone of household-infra inside `~/household/agent-work/<task>/`, its HEAD the pin, the
   pin on the freshly fetched `origin/main`, `npm ci` from its lockfile, nothing changed or untracked. hous never fetches, pulls or uses
   Sean's checkout. `--task` takes the story grammar `HOUS-<n>` (for the calendar sitting, `HOUS-662`).
@@ -175,17 +201,30 @@ reads that were Sean's viewer rows. Source of truth: housetools `tools/aws/READM
   no general exemption: every schema or data change keeps the writer stop and restart rule ([Schema and data-change
   sittings](#schema-and-data-change-sittings)).
 
+## Showing the approval document
+This applies to every standalone card and every sitting summary.
+- Before the write picker, show the complete verified approval document, including generated statement blocks inline; a reviewed
+  source pin or hash does not replace their text. Creation prints metadata and display commands only, not the approval document.
+- For chat display, paste the exact output of `hous aws show <id> --page N` for every page, including its digest/page metadata; even a
+  small document uses verified page 1, and creation stdout is not approval-display evidence. Alternatively, Sean runs
+  `hous aws show <id> --pager` in his Terminal and reviews the full document there. Keep the same document SHA-256 throughout.
+- The SC gives him the ID, structured approval hash, document SHA-256 and exact display command in its own tab. A different digest,
+  missing page, truncated output or display refusal stops before the picker. A summary, excerpt or hash alone is not complete display.
+- Pager exit and a tool's delivery report do not prove he read it; Sean's explicit review confirmation and subsequent exact approval
+  picker remain his actions. The SC records the route and verified hashes in the sitting notes.
+- `Approve <id> <12 hex>` and `Reject`, `hous aws ok`, the separate sitting-read OK, and all single-use rules remain unchanged.
+
 ## Exact sitting summaries
 Build all child cards before the write OK, under the existing sitting OK for reads and plan steps. Then run `hous aws sitting card <card>... --task <ticket>`.
-Show its complete text, including every child's content, id and immutable-card hash, then ask with the interactive question picker
+Show the complete summary document, including every child's content, id and immutable-card hash, as [Showing the approval document](#showing-the-approval-document) says, then ask with the interactive question picker
 (SKILL.md "Asking for an OK"; exactly the two choices the summary prints: `Approve <sitting id> <12 hex>` and `Reject`), and, only if he selected the approval label, record that one label verbatim with `hous aws ok`. `Reject`, "Other" or typed text, cancellation or no answer stops: record and apply nothing.
-Only `hous aws sitting apply --card <next-child>` may consume that approval, in the sealed order. Direct child apply/run and child OK are refused.
+Only `hous aws sitting apply <sitting-id> --card <next-child> --task <ticket> --detach` may consume that approval, in the sealed order, one launch per child, each observed to its final result ([Detached launch and observation](#detached-launch-and-observation)). Direct child apply/run and child OK are refused.
 A staging schema or data change runs in this order; [Writer stop and restart](#writer-stop-and-restart) owns the stop, drain, restart and recovery steps. Under the sitting OK, the opening reads and the eligible change-set plans; then the standalone writer-stop card; then, where the staged worker exists, its standalone paused-config card and read-back; then the deferred same-stack plans; then the quiet/drain and after-drain reads. Only then **one sealed change summary**, in exactly this order: the numbered `apply-step` cards (each its own practice-then-live pair) and any fixed data card in chain order, then `dsql-proof.verify-init` when the run sheet calls for it. For the ownership change that is: the 0005 pair, `dsql-proof.backfill-owners`, the 0006, 0007 and 0008 pairs, then verify-init. For a later change the order is `dsql-proof.verify-init` first (its `digests.before` is the preservation baseline), then the cards in chain order, then the final `dsql-proof.verify-init`, whose digests are compared with the first. No reset or init card is ever a child. After verification passes, a second (release) summary: the release change-set cards, the catalogue seed and the writer restart card, in that order (the restart card last, built only after the stop card has run); then its read-back, any required new runtime-role mapping, and the standalone enabled-config card and read-back. Both config cards have their own OKs and are never summary children. If the stop or any read before the change summary fails, Sean rejects the change summary, or a child card cannot be built, nothing is applied and recovery follows Writer stop and restart (a rejected summary, or an unbuildable one that was already created, is closed first with `hous aws sitting stop`). A spent or summary-owned card is never reused. Inbox setup is not a card and never a child of the summary: it is Sean's separate action in his own terminal, after verification, under its own separate exact OK. Check the step names against the target chain's directories before sealing. A reordered, dropped, added or later-built child is a different summary and needs a new OK.
-Run the run sheet's required checks between children; no next card runs merely because the previous card passed.
+Read each child's final result, then run the run sheet's required checks between children; no next card runs merely because the previous card passed.
 Before every child after the first that is, or follows, a database card, `hous aws sitting apply` itself reads for pending household jobs (verify-only at once, then every 60 seconds, up to 600 seconds); a read failure or jobs still pending at the bound fails the sitting before that child starts. The run sheet needs no duplicate manual row for this wait (trap 33 gives the cause).
 If any external check fails, or the session ends, close remaining permission with `hous aws sitting stop <sitting-id>`; do not continue.
 The ordered ids and whole immutable-card hashes are sealed by a summary SHA-256; `ok` refuses unless recomputation matches
-the sealed hash already printed to Sean, then records that same hash, never a replacement computed later.
+the sealed hash printed in the summary document shown to Sean, then records that same hash (and the document SHA-256), never a replacement computed later.
 Apply rechecks it, every child and the existing live-state/pin gates. Child progress, read-back statuses and recorded OK metadata are not approval content.
 No stack-name match, template similarity, regenerated card id or post-OK hash can substitute for exact membership.
 The first failure (including a read-back), interruption or occupied one-time claim stops all remaining children; the summary cannot resume.
@@ -209,8 +248,8 @@ Sitting progress:
 - [ ] 1. Prepare offline
 - [ ] 2. Sean signs in and gives the sitting OK
 - [ ] 3. Build every child card of the env before asking for the write OK (a schema or data change: the stop card's own OK comes first, see "Exact sitting summaries")
-- [ ] 4. Show the complete sealed sitting summary, get one write OK, hous aws ok
-- [ ] 5. hous aws sitting apply, then read the read-backs (standalone cards still use apply/run)
+- [ ] 4. Show the complete verified sitting summary (every hous aws show page, or Sean's pager), get one write OK, hous aws ok
+- [ ] 5. hous aws sitting apply --detach, observe to the final result, read the read-backs (standalone cards still use apply/run --apply --detach)
 - [ ] 6. Production: own plan, separate summary/card, own OK
 - [ ] 7. Lessons entry
 ```
@@ -223,18 +262,18 @@ The SC that owns the sitting puts every picker below to Sean itself, in its own 
    A sitting row that offers a deploy button (the fallback route) names the role its workflow assumes; identify that role offline here.
 2. **Sign-in and sitting OK.** Sean types `! hous aws login household-<env>` (rule 2) and gives the sitting OK through the interactive question picker (exactly two choices: `Approve <env> <scope words>` and `Reject`) after a full plain-words account of the env, stacks and the read/plan scope; `Reject`, "Other" or typed text, cancellation or no answer stops before `--go`. Read the printed link and code from the output and relay them if he asks. Check with `hous aws login --status household-<env>`, then `hous aws whoami --env <env>`. Under this sitting OK, before offering a deploy button, read that its role exists in the target account and that its trust allows the workflow's repository, branch and actor; a template, an earlier sitting or a merged PR is not evidence. If the role is missing or its trust differs, the button is unavailable: use the card route or queue the fix.
 3. **Plan.** `hous aws plan <Stack>... --env <env> --task <ticket> --go "<the chosen Approve label, verbatim>"`. Stop on any refusal ([cards-and-stops.md](cards-and-stops.md#when-a-verb-stops)). Fix by PR, then plan again;
-   a refused plan deletes the change sets it made. Note the evidence path and the card id.
+   a refused plan deletes the change sets it made. Note the evidence path, the card id and the hashes it prints (it prints the card's metadata and `show` commands, not the card).
    A card that starts a clock (a temporary grant, a deadline) is built only after the sitting SC has
    asked Sean and he has confirmed he is present for the whole window; the question tells him the window's length and the end time in EDT
    it would have if built now (the window is fixed when the card is built). If he cannot stay, build it later. On Nov 6 a 45-minute grant was applied while Sean was then away for
    1 h 35 min; the window lapsed and a sixth operator OK was needed.
-4. **Summary or standalone card.** For multiple cards, build and paste the complete sitting summary exactly as printed.
+4. **Summary or standalone card.** For multiple cards, build the sitting summary and show its complete document as [Showing the approval document](#showing-the-approval-document) says.
    Then ask with the interactive question picker (one question, exactly the summary's two printed choices: `Approve <sitting id> <12 hex>` and `Reject`).
-   Only if he selected the approval label: `hous aws ok <sitting-id> --words "<the chosen label, verbatim>"` (if `ok` refuses the label, stop; never reword or replay), and execute each next child with `hous aws sitting apply <sitting-id> --card <next-child> --task <ticket>`.
+   Only if he selected the approval label: `hous aws ok <sitting-id> --words "<the chosen label, verbatim>"` (if `ok` refuses the label, stop; never reword or replay), and launch each next child once with `hous aws sitting apply <sitting-id> --card <next-child> --task <ticket> --detach`, observing it to its final result ([Detached launch and observation](#detached-launch-and-observation)) before the between-card checks.
    One clear reply covers only the exact sealed list once; do not request another reply for each child.
-   For one standalone card, paste its text exactly, ask with the picker (exactly the card's two printed choices: `Approve <card id> <12 hex>` and `Reject`), and only if he selected the approval label use `hous aws ok <card-id> --words "<the chosen label, verbatim>"`.
+   For one standalone card, show its complete document the same way, ask with the picker (exactly the card's two printed choices: `Approve <card id> <12 hex>` and `Reject`), and only if he selected the approval label use `hous aws ok <card-id> --words "<the chosen label, verbatim>"`.
    `Reject`, "Other" or typed text (whatever it says), cancellation or no answer stop: do not invoke `hous aws ok`, pass `--go` or apply. A general go-ahead never counts.
-5. **Apply.** For a standalone change-set card, `hous aws apply <card-id> --task <ticket>`; for an owned child, use `sitting apply` as above. It re-checks every change set, runs them in the card's order, watches each stack,
+5. **Apply.** For a standalone change-set card, `hous aws apply <card-id> --task <ticket> --detach` (a `run --card` card: `hous aws run --apply <card-id> --task <ticket> --detach`); for an owned child, use `sitting apply` as above. Save the run ID and observe it to its final result ([Detached launch and observation](#detached-launch-and-observation)); the lines below are in the final `apply-wait` replay or `apply-status <run-id> --output`. It re-checks every change set, runs them in the card's order, watches each stack,
    enables termination protection only on `*_COMPLETE`, then runs the read-backs (`PASS`/`FAIL` lines). Report them to Sean in plain words with times in EDT, no ticket codes, no UTC stamps. Two failures differ:
    - A script or deploy failure stops all later stacks, prints the failed stack's status and failed events, and marks the card failed: go to [failed-stack.md](failed-stack.md).
    - A read-back `FAIL` after every change set ran leaves the card `applied` (spent). Every stack is already deployed, the other read-backs are still run and printed,
@@ -243,7 +282,7 @@ The SC that owns the sitting puts every picker below to Sean itself, in its own 
    A log read that runs only on a failure (the raw twin of a verdict read) also includes the worker's error-level lines for the same window (`{ $.level >= 50 }` for household-api's pino logger), so a thrown handler's cause is seen without another OK.
 6. **Production.** Only after the same templates are live and verified on staging at the same commit (`plan` checks this and stops otherwise).
    Own `plan`, separate summary or standalone card, own OK; never inherit staging's approval.
-7. **Lessons.** `apply` and `run --apply` end with a reminder: every sitting appends at least one entry to `lessons-pending.md`; a clean sitting records one saying it had no lessons. A lesson closes only as SKILL.md rule 12 says.
+7. **Lessons.** `apply` and `run --apply` output (in the final replay) ends with a reminder: every sitting appends at least one entry to `lessons-pending.md`; a clean sitting records one saying it had no lessons. A lesson closes only as SKILL.md rule 12 says.
 
 ## Reading cards and handling stops
 How to read a card (an example, the `Staging:` lines, kept parameters, `run --card` cards) and what each
@@ -258,10 +297,11 @@ stops `plan` ("in the change set, not expected"). Any other change next to it ne
 ## Where the evidence lands
 All under `${XDG_STATE_HOME:-~/.local/state}/hous/aws/` (mode 0700; never in a repo):
 - `runs/<stamp>-<verb>-<env>-<rand>/run.json`: verb, arguments, `--go`, caller, commit, every AWS call with its output, the scripts' output, exit.
-- `cards/<card-id>.md` and `.json`: standalone cards and sitting summaries; summary bindings hold the ordered child ids, immutable-card hashes and approved summary hash.
-- A sitting's one-time claim and per-child ownership records prevent concurrent apply, standalone child execution and reuse after interruption; never remove them to retry.
+- `cards/<card-id>.md`, `.md.sha256` and `.json`: standalone cards and sitting summaries, the approval document with its creation-time digest; summary bindings hold the ordered child ids, immutable-card hashes and approved summary hash.
+- `apply-runs/<run-id>/`: a detached run's launch, progress and final records and its complete log (what `apply-status` and `apply-wait` read).
+- A sitting's one-time claim, per-child ownership records and each card's launch binding (`apply-runs/bindings/`) prevent concurrent apply, standalone child execution and reuse after interruption; never remove them to retry.
 - `infra/<sha>/` (scratch clone of household-infra at the commit), `artifacts/<sha>/` (the downloaded templates), `hook.log` (every hook deny).
-Put the card text, the card id and the `run.json` paths in the sitting notes in the work directory.
+Put the card document's path, the card id, the display route with the verified hashes, each detached run ID and the `run.json` paths in the sitting notes in the work directory.
 
 ## What is in place
 - The hook (`hous aws hook check`, installed in Claude Code and Codex) denies AWS writes, `cdk deploy|destroy|bootstrap|rollback|import|refactor|watch|gc`,

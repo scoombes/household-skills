@@ -4,7 +4,8 @@
   **management** account, `us-east-1`. Stacks: `Household-Management-DnsZone` and `Household-Management-DnsRecords`.
   "A staging DNS change" is still a management-account change.
 - Records are changed only through `Household-Management-DnsRecords` (CDK, operator synthesizer). In approval mode that is
-  `hous aws plan Household-Management-DnsRecords --env management --task <ticket> --go "<sitting OK>"`, then the card, `hous aws ok`, `hous aws apply`.
+  `hous aws plan Household-Management-DnsRecords --env management --task <ticket> --go "<sitting OK>"`, then the card (shown through `hous aws show`),
+  `hous aws ok`, `hous aws apply <card> --task <ticket> --detach`, and the final result from `hous aws apply-wait <run-id>` (or `apply-status <run-id> --output`).
   The card says `Staging: no staging copy` and `CloudFormation runs as: your session`; his OK on it applies the change. (Sean-runs mode: Sean pastes the write block.)
 - Never type `route53 change-resource-record-sets` in the shell (the hook denies it, and the record would drift from the stack). `hous aws run` supports it,
   but only for a change Sean asks for outside the stack, as a write plan on its own card.
@@ -14,7 +15,7 @@
 DNS change:
 - [ ] 1. checks.md steps 0–5 on Household-Management-DnsRecords (profile household-management, us-east-1)
 - [ ] 2. List each record added, changed or removed (name, type, old -> new value, TTL)
-- [ ] 3. Write runs: plan, card, Sean's OK, apply (approval-mode.md)
+- [ ] 3. Write runs: plan, card, Sean's OK, detached apply and its final result (approval-mode.md)
 - [ ] 4. Verify at the authoritative nameservers, then at public resolvers (`hous aws read stack-status --env management --stack Household-Management-DnsRecords` first)
 - [ ] 5. Report and lessons entry
 ```

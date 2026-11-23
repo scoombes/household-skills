@@ -69,7 +69,9 @@ still require Sean.
 - Major drift (below).
 - A CRITICAL finding (panel-coordinator.md, CRITICAL halt).
 - Any AWS deploy or AWS write, staging included: the gate is Sean's OK on the approval card of a sitting, which the
-  sitting SC asks for (Final sitting); agents then run `hous aws apply|run`. Packages READY before the switch
+  sitting SC asks for (Final sitting); agents then launch `hous aws apply|run --apply|sitting apply` once with the mandatory
+  `--detach` and read each run's final output and result (`hous aws apply-wait` or `apply-status --output`) before proceeding.
+  Packages READY before the switch
   (`hous help aws apply` succeeding) finish with `hous pkg run`, including the writes their Waivers section names;
   nothing new uses that path. Every other step only Sean can do (`operating-household-aws` skill).
 - A blocking finding still open after 3 panel rounds, a disputed well-formed HIGH, a test budget

@@ -23,12 +23,13 @@ description: Applies HouseHold's AWS operating rules (who may run reads and writ
     Tell Sean the runtime role can write before the picker is shown. This grants no setup, mapping, generic SQL, other AssumeRole or production route.
   - `hous aws database-viewer`, solely through household-infra's pinned reader (`tools/database-viewer/`), for exactly one query of a
     reviewed read set. The permitted reads are the reviewed read sets merged in household-infra `tools/database-viewer/read-sets/`
-    (today only `calendar-cutover-v1`: `open-series-count` and `population-export`), each run only under a sitting OK whose label names
+    (the reviewed sets include `calendar-cutover-v1`: `open-series-count` and `population-export`; and `calendar-cutover-v2`: those two
+    plus `population-group-count`), each run only under a sitting OK whose label names
     that exact set and its digest prefix. A new or changed set needs a merged household-infra PR with Sean's Code Owner approval and the
     two-reviewer panel (plus a housetools release if it needs a new output kind, since hous validates each output kind with a fixed serializer), then a new sitting label; no skill edit is needed per set. The reader assumes Household-Staging-DatabaseViewerReader in staging, signs a non-admin DbConnect token and runs that query's reviewed bytes as
     the SELECT-only database user `household_viewer_reader` in a `READ ONLY` transaction. The sitting OK must contain the exact clause
-    `database viewer check reads for <set> sha256 <first 12 hex of that set's digest>` (today `calendar-cutover-v1 sha256 478be223889d`; take it from
-    `--check` at the pinned commit, never from memory); the old phrase `database viewer check reads` alone is refused.
+    `database viewer check reads for <set> sha256 <first 12 hex of that set's digest>` (take each set's own prefix from
+    `--check` at the pinned commit, never from memory, and never reuse the old v1 digest for v2); the old phrase `database viewer check reads` alone is refused.
     It grants nothing else: no other SQL, query, set, route or output path, and no setup, mapping, grant, recovery, schema change, write, other AssumeRole,
     production route or use of `hous db connect` (that stays Sean's). Its procedure, private-export handling, failure stops and Sean's
     one-time setup are in [approval-mode.md](reference/approval-mode.md#database-viewer-reads).
@@ -41,15 +42,19 @@ description: Applies HouseHold's AWS operating rules (who may run reads and writ
     approval label is `Approve <env> <scope words>`; the chosen label is the OK, recorded and passed verbatim as `--go` (`hous` refuses
     any other form).
   - A general go-ahead ("I trust you, just do it") is not an OK for a write.
-- **Card**: the plain-words approval card `hous aws plan` (or `run --card`) prints. A standalone **card OK**, recorded
-  verbatim with `hous aws ok`, covers exactly that card once. It is asked with the picker after the full card is shown;
+- **Card**: the plain-words approval card `hous aws plan` (or `run --card`) creates; creation saves the full document and prints
+  only its metadata and `show` commands, never the card. A standalone **card OK**, recorded
+  verbatim with `hous aws ok`, covers exactly that card once. It is asked with the picker after the full card is shown
+  (`hous aws show` pages or Sean's pager, below);
   the approval label is the `Approve <card id> <12 hex>` line the card prints (the first 12 hex of its immutable-card hash).
 - **Sitting summary and write OK**: `hous aws sitting card <card>... --task <ticket>` seals a nonempty ordered list of
-  fully built cards for one environment and account. It prints every card's full content, without truncation, its id and
-  its whole immutable-card SHA-256, and the summary SHA-256. Sean sees this complete summary, exactly as printed, before replying once;
+  fully built cards for one environment and account. Its saved summary document holds every card's full content, without truncation, its id and
+  its whole immutable-card SHA-256, and the summary SHA-256; sealing prints only metadata and `show` commands. Sean sees this complete
+  verified document (`hous aws show` pages or his pager, below) before replying once;
   the reply is the picker's chosen approval label, the `Approve <sitting id> <12 hex>` line the summary prints (the first 12 hex of
   the summary SHA-256). `hous aws ok <sitting-id> --words "<the chosen label, verbatim>"` binds that reply to exactly those ids, hashes and order.
-  `hous aws sitting apply <sitting-id> --card <next-child> --task <ticket>` executes only the next listed card through the existing apply/run gates.
+  `hous aws sitting apply <sitting-id> --card <next-child> --task <ticket> --detach` launches only the next listed card through the existing apply/run gates,
+  observed to its final result with `hous aws apply-status` or `hous aws apply-wait` before the run sheet's checks and the next launch.
   No wildcard scope, added card, altered card or later-built card inherits this OK. No child may run separately under it.
   Failure, interruption or a failed read-back stops the sitting; no later child runs. A replacement needs a new summary
   and a new OK, even for the same stacks or schema steps. Production keeps a separate summary/card and its own OK.
@@ -58,7 +63,11 @@ description: Applies HouseHold's AWS operating rules (who may run reads and writ
   session asks; rule 11; seats never ask Sean), with the interactive
   question picker (Claude Code `AskUserQuestion`; the Codex equivalent): one question, exactly two options. (1) The approval label,
   exactly as below. (2) `Reject`.
-  - Write OKs (card, sitting summary): first show the complete tool-printed card or summary exactly as printed. It ends with its two
+  - Write OKs (card, sitting summary): first show the complete verified approval document, generated statement blocks inline: paste
+    every page of `hous aws show <id> --page N` with its digest/page metadata (even a small document uses page 1; creation output is not
+    display evidence), or Sean runs `hous aws show <id> --pager` in his Terminal, keeping one document SHA-256 throughout. A different
+    digest, missing page, truncated output or display refusal stops before the picker; a summary, excerpt or hash alone is not complete
+    display, and pager exit is not proof he read it ([approval-mode.md](reference/approval-mode.md#showing-the-approval-document)). It ends with its two
     choices; the approval option is its `Approve <id> <12 hex>` line copied byte for byte (a card: card id + first 12 hex of its
     immutable-card hash; a sitting summary: sitting id + first 12 hex of the summary SHA-256), the second is `Reject`.
   - The initial sitting OK comes before any card exists, so no printed card or summary is possible. First give a full plain-words account
@@ -77,8 +86,8 @@ description: Applies HouseHold's AWS operating rules (who may run reads and writ
 ## Pick the write mode first
 Run `hous help aws apply`. Probes like this, file reads, `cdk synth` and `hous ci` need no OK.
 - **It succeeds: approval mode. This is the normal path.**
-  - Writes run only through `hous aws apply` / `hous aws run`, after Sean's standalone card OK or from `hous aws sitting apply` under the exact sealed sitting summary's write OK (the one exception is the packages READY before the switch, below). A hook in Claude Code and Codex denies any other AWS write, `cdk deploy`, `cdk destroy` and `cdk bootstrap`.
-  - The database write routes are six fixed families, all staging only. Each runs only as a `hous aws run` card (`run --card <plan.json>`, Sean's standalone card OK or, where the family permits it, its inclusion in the exact approved sitting summary (`household-entitlements` is standalone only), `run --apply`), never by hand. The hook denies their live and practice runs outside the verb; the read-only forms ([approval-mode.md](reference/approval-mode.md#what-is-in-place)) are not writes.
+  - Writes run only through `hous aws apply` / `hous aws run`, after Sean's standalone card OK or from `hous aws sitting apply` under the exact sealed sitting summary's write OK (the one exception is the packages READY before the switch, below). Each apply is launched once with `--detach` and observed to its final result with `hous aws apply-status` / bounded `hous aws apply-wait`; a waiter timeout ends only observation and never permits a relaunch ([approval-mode.md](reference/approval-mode.md#detached-launch-and-observation)). A hook in Claude Code and Codex denies any other AWS write, `cdk deploy`, `cdk destroy` and `cdk bootstrap`.
+  - The database write routes are six fixed families, all staging only. Each runs only as a `hous aws run` card (`run --card <plan.json>`, Sean's standalone card OK or, where the family permits it, its inclusion in the exact approved sitting summary (`household-entitlements` is standalone only), `run --apply --detach`), never by hand. The hook denies their live and practice runs outside the verb; the read-only forms ([approval-mode.md](reference/approval-mode.md#what-is-in-place)) are not writes.
     1. `dsql-proof apply-step`: one numbered schema step, a practice run then its live run.
     2. `dsql-proof seed-catalogue`: the catalogue seed, a practice run then its live run.
     3. `dsql-proof.backfill-owners`: the ownership change's fixed data operation, a single-entry staging card like `verify-init`. It runs only between steps 0005 and 0006 of the ownership change; read [approval-mode.md](reference/approval-mode.md#schema-and-data-change-sittings) first.
@@ -145,7 +154,8 @@ Apart from that, never run a write any other way in either mode. If the hook den
 9. **Lambda code:** before any deploy that ships it, `hous lambda check` must pass in household-api on the commit being deployed.
 10. **Staging proof API and app:** HTTPS calls with synthetic data need no OK. This grants no AWS access.
 11. **Messages to Sean:** plain words, no internal codes (HOUS-/E-/D- ids stay in files and agent messages), times
-    in EDT. A card or combined sitting summary goes to him exactly as the tool printed it, with every child shown up front.
+    in EDT. A card or combined sitting summary goes to him complete and verified, through every `hous aws show` page or his pager
+    ([approval-mode.md](reference/approval-mode.md#showing-the-approval-document)), with every child shown up front.
     - **Keep his time short.** Sean, about 5 hours into the Nov 6 sitting: "how much of this is left I really disklike sittings", then
       "we are done lets clean up". Batch every request into one sitting, cut every row that can be automated (app and browser flows run
       headless, trap 40), and tell him up front how many minutes he is needed, per block and in total. Order the blocks so a stop loses the
@@ -168,7 +178,7 @@ Apart from that, never run a write any other way in either mode. If the hook den
       - The SC tells the EC what Sean chose, for the epic log; it never asks the EC to relay a question or an answer. If Sean raises a
         sitting matter in another coordinator's tab, that coordinator points him to the SC's tab and forwards his exact words to the SC;
         it asks him nothing itself, and nothing typed there is an OK.
-12. **Lessons:** `hous aws apply` and `hous aws run --apply` end with a reminder. Every sitting appends at least one
+12. **Lessons:** `hous aws apply` and `hous aws run --apply` output (the final `apply-wait` replay) ends with a reminder. Every sitting appends at least one
     entry to the work directory's `lessons-pending.md` (what happened, which verb or text should have caught it, the closing change).
     A clean sitting records one entry saying it had no lessons; that entry needs no closing change.
     - Entries move into `household-infra/docs/runbooks/aws-lessons-log.md` by PR from a scratch clone, each with a `Closed by:` line.
