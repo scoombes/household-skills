@@ -4,8 +4,10 @@ Reads only, under SKILL.md rules 1–4 and Sean's OK for the sitting. No retry, 
 In approval mode a recovery write is a `hous aws run` write plan on its own card and fresh OK (step 5). The card is spent either way.
 If it belonged to a sitting summary, that summary is spent too and all remaining children stop. Recovery is excluded from summaries;
 replacement or later-built cards need a new summary/card and new OK after triage, never the failed sitting's reply.
-- After a script or deploy failure, `hous aws apply` already printed the failed stack's status and failed events and marked the card failed; later stacks did not run.
-- After `the change sets were executed, but a read-back failed`, every stack is deployed and the card stays `applied`. `apply` printed the `FAIL` lines
+- `hous aws apply` runs detached: first read its original triage from the final `hous aws apply-wait <run-id>` replay or
+  `hous aws apply-status <run-id> --output`, before any further authorized read. Recovery still needs its own card.
+- After a script or deploy failure, that `hous aws apply` output already holds the failed stack's status and failed events and the card is marked failed; later stacks did not run.
+- After `the change sets were executed, but a read-back failed`, every stack is deployed and the card stays `applied`. `apply`'s output holds the `FAIL` lines
   but no status or events, so step 1 below is yours to run, for the stack named on each `FAIL` line.
 
 ```
@@ -24,7 +26,7 @@ hous aws read stack-status --env <env> --stack <S>
 hous aws read failed-events --env <env> --stack <S>
 ```
 `failed-events` is `describe-events --filters FailedEvents=true` and prints the response (not `describe-stack-events`, which hides validation results).
-`stack-status` only says PASS or FAIL (FAIL for any state that is not `CREATE|UPDATE|IMPORT_COMPLETE`); for the status text, `apply` already printed it after a script or deploy failure (not after a read-back failure),
+`stack-status` only says PASS or FAIL (FAIL for any state that is not `CREATE|UPDATE|IMPORT_COMPLETE`); for the status text, `apply`'s output (the final replay) already holds it after a script or deploy failure (not after a read-back failure),
 or use a read file with one step `["cloudformation", "describe-stacks", "--stack-name", "<S>"]` and no `expect` (it prints the response).
 Save the output in the work directory. Sean-runs mode only, by hand under the SKILL.md header: the same `describe-stacks` and `describe-events`.
 CDK projects: also run `npx cdk --unstable=diagnose diagnose <S> --profile <p>` (a read; it uses the repo's pinned
