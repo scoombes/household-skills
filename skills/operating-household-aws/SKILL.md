@@ -151,6 +151,10 @@ Apart from that, never run a write any other way in either mode. If the hook den
       headless, trap 40), and tell him up front how many minutes he is needed, per block and in total. Order the blocks so a stop loses the
       least: the rows he cares least about (VoiceOver passes, extra cards) go last, and the run sheet marks a stop point after each block,
       saying what stays proven if he stops there.
+    - **Say where a provider fact comes from.** Anything said to Sean about Apple's, the Sandbox's or another
+      provider's behaviour or timing names its observed source (a read, a log line, a documentation link) or is
+      labelled an inference. A renewal interval comes from two consecutive server reads, never from one period end
+      (HOUS-662 sitting attempt 2: an unobserved renewal interval was passed on as fact).
     - **The SC that owns the sitting asks him everything in it.** Sean, Nov 6, to the sitting's SC: "as teh SC for the sitting you own
       it". That SC (the EC's dedicated sitting SC, or a lone story's SC) puts every picker to Sean itself, in its own tab, where he sits:
       the sitting OK, every card and summary OK, and every Sean step and its choice. One picker per question, in that one tab: the EC
